@@ -1,13 +1,15 @@
 package main
 
 import (
+	"github.com/thingio/edge-core/common/log"
 	"github.com/thingio/edge-core/datahub/conf"
-	"github.com/thingio/edge-core/datahub/resource/server"
+	"github.com/thingio/edge-core/datahub/server"
 )
 func init() {
-	conf.Load()
+	conf.Load("etc/edge.yaml")
 }
 
 func main() {
-	server.Start()
+	err := server.Start()
+	log.WithError(err).Errorf("fail to start server")
 }

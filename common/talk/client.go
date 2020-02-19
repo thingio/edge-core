@@ -1,65 +1,24 @@
-package client
+package talk
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/thingio/edge-core/common/conf"
 	"github.com/thingio/edge-core/common/log"
-	"github.com/thingio/edge-core/common/toolkit"
 	"time"
 )
 
-type DatahubClient struct {
-}
-
-type Method string
-
-const (
-	ERR Method = "ERR"
-	REQ Method = "REQ"
-	RSP Method = "RSP"
-	PUB Method = "PUB"
-	SUB Method = "SUB"
-)
-
-type TMsg struct {
-	ID      string
-	Sender  string
-	Method  Method
-	Key     string
-	Payload interface{}
-	QoS     byte
-}
-
-func NewTMsg() *TMsg {
-	return &TMsg{ID: toolkit.NewUUID(), QoS: 1}
-}
-
-func (t *TMsg) WithMethod(method Method) {
-	t.Method = method
-}
-
-func (t *TMsg) WithKey(key string) {
-	t.Key = key
-}
-
-func (t *TMsg) WithPayload(payload interface{}) {
-	t.Payload = payload
-}
-
-func (t *TMsg) WithQoS(qos byte) {
-	t.QoS = qos
-}
-
-type TMsgHandler func(*TMsg)
+type TMsgHandler func(path string, payload interface{}) (interface{}, error)
 
 type TClient struct {
-	clientID  string
-	client    mqtt.Client
-	qos       byte
-	timeout   time.Duration
-	callQueue map[int64]chan *TMsg
+	clientId    string
+	client      mqtt.Client
+	qos         byte
+	timeout     time.Duration
+	callQueue   map[string]chan *TMsg
+	reqHandler  TMsgHandler
+	tchanPrefix string
 }
 
 func parseOpts(config conf.MqttConfig) *mqtt.ClientOptions {
@@ -68,7 +27,7 @@ func parseOpts(config conf.MqttConfig) *mqtt.ClientOptions {
 	opts.AddBroker("tcp://" + config.BrokerAddr)
 	opts.SetAutoReconnect(true)
 	opts.SetKeepAlive(60 * time.Second)
-	//opts.SetCleanSession(false)
+	opts.SetCleanSession(false)
 	opts.SetOnConnectHandler(onConnect)
 	opts.SetConnectionLostHandler(onConnectionLost)
 	return opts
@@ -86,19 +45,30 @@ func onConnectionLost(c mqtt.Client, err error) {
 	return
 }
 
-func NewTClient(c conf.MqttConfig, clientId string) *TClient {
+func NewTClient(c conf.MqttConfig, clientId string, tchanPrefix string) *TClient {
 	mqttOpts := parseOpts(c)
 	mqttOpts.ClientID = clientId
 	return &TClient{
-		clientID:  clientId,
-		client:    mqtt.NewClient(mqttOpts),
-		qos:       c.QoS,
-		timeout:   time.Duration(c.RequestTimeoutMS) * time.Millisecond,
-		callQueue: make(map[int64]chan *TMsg),
+		clientId:    clientId,
+		client:      mqtt.NewClient(mqttOpts),
+		qos:         c.QoS,
+		timeout:     time.Duration(c.RequestTimeoutMS) * time.Millisecond,
+		callQueue:   make(map[string]chan *TMsg),
+		tchanPrefix: tchanPrefix,
 	}
 }
 
-const MqttChannelPrefix = "/channel/"
+func (t *TClient) ClientId() string {
+	return t.clientId
+}
+
+func (t *TClient) SetReqHandler(h TMsgHandler) {
+	t.reqHandler = h
+}
+
+func (t *TClient) buildChanTopic(service string, serviceFunction string) string {
+	return t.tchanPrefix + fmt.Sprintf("/%s/%s", service, serviceFunction)
+}
 
 func (t *TClient) Connect() error {
 	tk := t.client.Connect()
@@ -107,13 +77,14 @@ func (t *TClient) Connect() error {
 		return err
 	}
 
-	channelTopic := MqttChannelPrefix + t.clientID
+	channelTopic := t.buildChanTopic(t.clientId, "#")
+	log.Infof("start to sub %s", channelTopic)
+
 	tk = t.client.Subscribe(channelTopic, t.qos, t.callHandler)
 	tk.Wait()
 	if err := tk.Error(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -121,24 +92,99 @@ func (t *TClient) callHandler(cli mqtt.Client, msg mqtt.Message) {
 	tmsg := &TMsg{}
 	err := json.Unmarshal(msg.Payload(), tmsg)
 	if err != nil {
-		log.Errorf("fail to unmarshal data %+v", msg)
+		log.Errorf("fail to unmarshal payload, ignore msg: %+v", msg)
+		return
 	}
 
 	if tmsg.Method == REQ {
+		log.Infof("receive req, tmsg: %+v", tmsg)
 
+		req := tmsg.Payload
+		if t.clientId != tmsg.KeyPart(KPI_Service) {
+			log.Errorf("shouldn't happen, client:%s != receiver:%s, ignore msg: %+v", t.clientId, tmsg.KeyPart(KPI_Service), msg)
+			return
+		}
+
+		function := tmsg.KeyPart(KPI_Function)
+		if function == "" {
+			log.Errorf("invalid req key %s, ignore msg: %+v", tmsg.Key, msg)
+			return
+		}
+
+		reply := &TMsg{ID: tmsg.ID, Key: t.buildChanTopic(tmsg.Sender, function)}
+		rsp, err := t.reqHandler(function, req)
+		if err != nil {
+			reply.Method = ERR
+			reply.Payload = err.Error()
+		} else {
+			reply.Method = RSP
+			reply.Payload = rsp
+		}
+		if _, err = t.Send(reply); err != nil {
+			log.Errorf("invalid req key %s, ignore msg: %+v", tmsg.Key, msg)
+		}
+		return
 	}
+
+	if tmsg.Method == RSP || tmsg.Method == ERR {
+		log.Infof("receive rsp, tmsg: %+v", tmsg)
+		ch, ok := t.callQueue[tmsg.ID]
+		if !ok {
+			log.Errorf("fail to find corresponding REQ msg, ignore msg: %+v", msg)
+			return
+		}
+		ch <- tmsg
+		return
+	}
+
+	log.Errorf("shouldn't happen, invalid method %s, ignore msg: %+v", tmsg.Method, msg)
 }
 
-func (t *TClient) RegHandler(topic string, handler TMsgHandler) chan *TMsg {
+func (t *TClient) Send(tmsg *TMsg) (chan *TMsg, error) {
+
+	tmsg.Sender = t.clientId
+
+	var rspCh chan *TMsg
+	if tmsg.Method == REQ {
+		rspCh = make(chan *TMsg)
+	}
+
+	t.callQueue[tmsg.ID] = rspCh
+	data, err := json.Marshal(tmsg)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Infof("send msg %s: %s", tmsg.Key, data)
+	tk := t.client.Publish(tmsg.Key, t.qos, false, data)
+	tk.Wait()
+	if err := tk.Error(); err != nil {
+		return nil, err
+	}
+	return rspCh, nil
 
 }
 
-func (t *TClient) Send(msg *TMsg) chan *TMsg {
+func (t *TClient) Watch(key string) (chan *TMsg, error) {
+	log.Infof("start to watch %s", key)
+	push := make(chan *TMsg)
+	handler := func(cli mqtt.Client, msg mqtt.Message) {
+		tmsg := &TMsg{}
+		err := json.Unmarshal(msg.Payload(), tmsg)
+		if err != nil {
+			log.Errorf("fail to unmarshal payload, ignore msg: %+v", msg)
+			return
+		}
 
-}
-
-func (t *TClient) SendAndWait(ctx context.Context, msg *TMsg) (*TMsg, error) {
-}
-
-func (t *TClient) Watch(key string) chan *TMsg {
+		if tmsg.Method != PUB {
+			log.Errorf("shouldn't happen, invalid method %s, ignore msg: %+v", tmsg.Method, msg)
+		}
+		push <- tmsg
+	}
+	tk := t.client.Subscribe(key, t.qos, handler)
+	tk.Wait()
+	if err := tk.Error(); err != nil {
+		return nil, err
+	}
+	return push, nil
 }

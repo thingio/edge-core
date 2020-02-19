@@ -7,6 +7,6 @@ var Config = struct {
 	Mqtt   conf.MqttConfig `yaml:"mqtt"`
 }{}
 
-func Load() {
-	conf.LoadConfig(&Config, "etc/edge.yaml")
+func Load(file string) {
+	conf.LoadConfig(&Config, file)
 }
