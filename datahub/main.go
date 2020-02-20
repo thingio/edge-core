@@ -6,7 +6,8 @@ import (
 	"github.com/thingio/edge-core/datahub/server"
 )
 func init() {
-	conf.Load("etc/edge.yaml")
+	conf.Load("etc/datahub.yaml")
+	log.Init(conf.Config.Log)
 }
 
 func main() {

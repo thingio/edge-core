@@ -3,7 +3,6 @@ package conf
 import (
 	"fmt"
 	"github.com/jinzhu/configor"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -22,9 +21,17 @@ func LoadConfig(dest interface{}, defaultConfig string) {
 	if file == "" {
 		file = defaultConfig
 	}
+
+	fmt.Printf("Loading config: %s\n", file)
+	if _, err := os.Stat(file); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
 	err := configor.Load(dest, file)
 	if err != nil {
-		log.Panicf("Failed to load config file %s: %s", file, err)
+		fmt.Printf("Fail to load config file %s: %s\n", file, err)
+		os.Exit(1)
 	}
 }
 

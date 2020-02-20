@@ -8,6 +8,7 @@ require (
 	github.com/cloudfoundry/gosigar v1.1.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-ole/go-ole v1.2.4 // indirect
+	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/jinzhu/configor v1.1.1
 	github.com/juju/errors v0.0.0-20190930114154-d42613fe1ab9
 	github.com/juju/loggo v0.0.0-20190526231331-6e530bcce5d8 // indirect

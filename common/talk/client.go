@@ -1,22 +1,23 @@
 package talk
 
 import (
-	"encoding/json"
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/golang/protobuf/proto"
 	"github.com/thingio/edge-core/common/conf"
 	"github.com/thingio/edge-core/common/log"
+	"github.com/thingio/edge-core/common/proto/talk"
 	"time"
 )
 
-type TMsgHandler func(path string, payload interface{}) (interface{}, error)
+type TMsgHandler func(path string, payload []byte) ([]byte, error)
 
 type TClient struct {
 	clientId    string
 	client      mqtt.Client
 	qos         byte
 	timeout     time.Duration
-	callQueue   map[string]chan *TMsg
+	callQueue   map[string]chan *talk.TMessage
 	reqHandler  TMsgHandler
 	tchanPrefix string
 }
@@ -35,13 +36,13 @@ func parseOpts(config conf.MqttConfig) *mqtt.ClientOptions {
 
 func onConnect(c mqtt.Client) {
 	opts := c.OptionsReader()
-	log.Infof("MQTTClient %s connected to %s", opts.ClientID(), opts.Servers()[0].String())
+	log.Infof("mqttclient '%s' connected to %s", opts.ClientID(), opts.Servers()[0].String())
 	return
 }
 
 func onConnectionLost(c mqtt.Client, err error) {
 	opts := c.OptionsReader()
-	log.WithError(err).Errorf("MQTTClient %s connection to %s has lost, will try to reconnect", opts.ClientID(), opts.Servers()[0].String())
+	log.WithError(err).Errorf("mqttclient '%s' connection to %s has lost, will try to reconnect", opts.ClientID(), opts.Servers()[0].String())
 	return
 }
 
@@ -53,7 +54,7 @@ func NewTClient(c conf.MqttConfig, clientId string, tchanPrefix string) *TClient
 		client:      mqtt.NewClient(mqttOpts),
 		qos:         c.QoS,
 		timeout:     time.Duration(c.RequestTimeoutMS) * time.Millisecond,
-		callQueue:   make(map[string]chan *TMsg),
+		callQueue:   make(map[string]chan *talk.TMessage),
 		tchanPrefix: tchanPrefix,
 	}
 }
@@ -89,35 +90,35 @@ func (t *TClient) Connect() error {
 }
 
 func (t *TClient) callHandler(cli mqtt.Client, msg mqtt.Message) {
-	tmsg := &TMsg{}
-	err := json.Unmarshal(msg.Payload(), tmsg)
+	tmsg := &talk.TMessage{}
+	err := proto.Unmarshal(msg.Payload(), tmsg)
 	if err != nil {
 		log.Errorf("fail to unmarshal payload, ignore msg: %+v", msg)
 		return
 	}
 
-	if tmsg.Method == REQ {
+	if tmsg.Method == talk.MethodREQ {
 		log.Infof("receive req, tmsg: %+v", tmsg)
 
 		req := tmsg.Payload
-		if t.clientId != tmsg.KeyPart(KPI_Service) {
-			log.Errorf("shouldn't happen, client:%s != receiver:%s, ignore msg: %+v", t.clientId, tmsg.KeyPart(KPI_Service), msg)
+		if t.clientId != tmsg.ServiceId() {
+			log.Errorf("shouldn't happen, client:%s != receiver:%s, ignore msg: %+v", t.clientId, tmsg.ServiceId(), msg)
 			return
 		}
 
-		function := tmsg.KeyPart(KPI_Function)
+		function := tmsg.ServiceFunction()
 		if function == "" {
 			log.Errorf("invalid req key %s, ignore msg: %+v", tmsg.Key, msg)
 			return
 		}
 
-		reply := &TMsg{ID: tmsg.ID, Key: t.buildChanTopic(tmsg.Sender, function)}
+		reply := &talk.TMessage{Id: tmsg.Id, Key: t.buildChanTopic(tmsg.Sender, function)}
 		rsp, err := t.reqHandler(function, req)
 		if err != nil {
-			reply.Method = ERR
-			reply.Payload = err.Error()
+			reply.Method = talk.MethodERR
+			reply.Payload = []byte(err.Error())
 		} else {
-			reply.Method = RSP
+			reply.Method = talk.MethodRSP
 			reply.Payload = rsp
 		}
 		if _, err = t.Send(reply); err != nil {
@@ -126,11 +127,11 @@ func (t *TClient) callHandler(cli mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	if tmsg.Method == RSP || tmsg.Method == ERR {
+	if tmsg.Method == talk.MethodRSP || tmsg.Method == talk.MethodERR {
 		log.Infof("receive rsp, tmsg: %+v", tmsg)
-		ch, ok := t.callQueue[tmsg.ID]
+		ch, ok := t.callQueue[tmsg.Id]
 		if !ok {
-			log.Errorf("fail to find corresponding REQ msg, ignore msg: %+v", msg)
+			log.Errorf("fail to find corresponding MethodREQ msg, ignore msg: %+v", msg)
 			return
 		}
 		ch <- tmsg
@@ -140,22 +141,22 @@ func (t *TClient) callHandler(cli mqtt.Client, msg mqtt.Message) {
 	log.Errorf("shouldn't happen, invalid method %s, ignore msg: %+v", tmsg.Method, msg)
 }
 
-func (t *TClient) Send(tmsg *TMsg) (chan *TMsg, error) {
+func (t *TClient) Send(tmsg *talk.TMessage) (chan *talk.TMessage, error) {
+	log.Infof("sending tmsg: %+v", tmsg)
 
 	tmsg.Sender = t.clientId
 
-	var rspCh chan *TMsg
-	if tmsg.Method == REQ {
-		rspCh = make(chan *TMsg)
+	var rspCh chan *talk.TMessage
+	if tmsg.Method == talk.MethodREQ {
+		rspCh = make(chan *talk.TMessage)
 	}
 
-	t.callQueue[tmsg.ID] = rspCh
-	data, err := json.Marshal(tmsg)
+	t.callQueue[tmsg.Id] = rspCh
+	data, err := proto.Marshal(tmsg)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Infof("send msg %s: %s", tmsg.Key, data)
 	tk := t.client.Publish(tmsg.Key, t.qos, false, data)
 	tk.Wait()
 	if err := tk.Error(); err != nil {
@@ -165,18 +166,18 @@ func (t *TClient) Send(tmsg *TMsg) (chan *TMsg, error) {
 
 }
 
-func (t *TClient) Watch(key string) (chan *TMsg, error) {
+func (t *TClient) Watch(key string) (chan *talk.TMessage, error) {
 	log.Infof("start to watch %s", key)
-	push := make(chan *TMsg)
+	push := make(chan *talk.TMessage)
 	handler := func(cli mqtt.Client, msg mqtt.Message) {
-		tmsg := &TMsg{}
-		err := json.Unmarshal(msg.Payload(), tmsg)
+		tmsg := &talk.TMessage{}
+		err := proto.Unmarshal(msg.Payload(), tmsg)
 		if err != nil {
 			log.Errorf("fail to unmarshal payload, ignore msg: %+v", msg)
 			return
 		}
 
-		if tmsg.Method != PUB {
+		if tmsg.Method != talk.MethodPUB {
 			log.Errorf("shouldn't happen, invalid method %s, ignore msg: %+v", tmsg.Method, msg)
 		}
 		push <- tmsg

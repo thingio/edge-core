@@ -17,7 +17,7 @@ import (
 var root = logrus.NewEntry(logrus.New())
 
 // Init init logger
-func Init(c Config, module string) error {
+func Init(c Config) error {
 	// mutex.Lock()
 	// defer mutex.Unlock()
 
@@ -53,7 +53,7 @@ func Init(c Config, module string) error {
 		}
 	}
 
-	root = WithFields("module", module)
+	root = WithFields("module", c.Module)
 	root.Logger.Level = logLevel
 	root.Logger.Out = logOutWriter
 	root.Logger.Formatter = newFormatter(c.Format, true)

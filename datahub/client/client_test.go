@@ -8,11 +8,11 @@ import (
 )
 
 func init() {
-	conf.Load("../etc/edge.yaml")
+	conf.Load("../etc/datahub.yaml")
 }
 
 func TestNode(t *testing.T) {
-	cli, err := NewDatahubClient(conf.Config.Mqtt, service.ApiServer, conf.Config.NodeId)
+	cli, err := NewDatahubClient(conf.Config.Mqtt, service.BootMan, conf.Config.NodeId)
 	if err != nil {
 		t.Errorf("fail to create datahub client, err: %s", err.Error())
 		return

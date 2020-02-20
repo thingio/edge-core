@@ -1,28 +1,31 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/juju/errors"
 	"github.com/thingio/edge-core/common/log"
 	"github.com/thingio/edge-core/common/proto/resource"
+	talkpb "github.com/thingio/edge-core/common/proto/talk"
 	"github.com/thingio/edge-core/common/service"
 	"github.com/thingio/edge-core/common/talk"
 	"github.com/thingio/edge-core/common/toolkit"
 	"github.com/thingio/edge-core/datahub/conf"
+	"time"
 )
 
 func Start() error {
-	cli := talk.NewTClient(conf.Config.Mqtt, string(service.DataHub), talk.TChanPrefix+"/"+conf.Config.NodeId)
+	cli := talk.NewTClient(conf.Config.Mqtt, string(service.DataHub), talkpb.TMessageChatPrefix+"/"+conf.Config.NodeId)
 	if err := cli.Connect(); err != nil {
 		return err
 	}
 	cli.SetReqHandler(reqHandler)
 
-	tchanKey := talk.TDataKey(conf.Config.NodeId, resource.KindAny, "")
+	tchanKey := talkpb.TMessageDataKey(conf.Config.NodeId, resource.KindAny, "")
 	if ch, err := cli.Watch(tchanKey); err != nil {
 		return err
 	} else {
 		for tmsg := range ch {
-			kind := resource.Kind(tmsg.KeyPart(talk.KPI_ResourceKind))
+			kind := resource.Kind(tmsg.ResourceKind())
 			Save(kind, tmsg.Payload)
 		}
 	}
@@ -30,17 +33,20 @@ func Start() error {
 	return nil
 }
 
-
-var handlers = map[service.ServiceFunction]func(key resource.ResourceKey) (interface{}, error) {
-	service.FuncGet: GetResource,
+var handlers = map[service.ServiceFunction]func(key resource.ResourceKey) (interface{}, error){
+	service.FuncGet:  GetResource,
 	service.FuncList: ListResource,
 }
-
 
 func GetResource(key resource.ResourceKey) (interface{}, error) {
 	log.Infof("receive get call: %+v", key)
 	if key.Kind == resource.KindNode {
-		return toolkit.NodeData(conf.Config.NodeId), nil
+		return &resource.Resource{
+			ResourceKey: key,
+			Value:       toolkit.NodeData(conf.Config.NodeId),
+			Ts:          time.Now().UnixNano(),
+			Version:     1,
+		}, nil
 	}
 
 	// TODO: should support device/pipeline/task/model/function
@@ -51,23 +57,20 @@ func ListResource(key resource.ResourceKey) (interface{}, error) {
 	return nil, nil
 }
 
-
-func reqHandler(function string, payload interface{}) (i interface{}, e error) {
+func reqHandler(function string, payload []byte) (i []byte, e error) {
 	f, ok := handlers[service.ServiceFunction(function)]
 	if !ok {
 		return nil, errors.Errorf("no handler found for %s", function)
 	}
-	args, ok := payload.(map[string]interface{})
-	if !ok {
-		return nil, errors.Errorf("payload is not parsable")
+	req := resource.ResourceKey{}
+	if err := json.Unmarshal(payload, &req); err != nil {
+		return nil, err
 	}
-
-	key := resource.ResourceKey{
-		args["node_id"].(string),
-		resource.Kind(args["kind"].(string)),
-		args["id"].(string),
+	rsp, err := f(req)
+	if err != nil {
+		return nil, err
 	}
-	return f(key)
+	return json.Marshal(rsp)
 }
 
 func Save(kind resource.Kind, data interface{}) {

@@ -2,6 +2,7 @@ package log
 
 // Config logger config
 type Config struct {
+	Module  string `yaml:"module" json:"module"`
 	Path    string `yaml:"path" json:"path"`
 	Level   string `yaml:"level" json:"level" default:"info" validate:"regexp=^(info|debug|warn|error)$"`
 	Format  string `yaml:"format" json:"format" default:"text" validate:"regexp=^(text|json)$"`

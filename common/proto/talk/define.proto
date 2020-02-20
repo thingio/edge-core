@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package talk;
+
+message TMessage  {
+    string id      =1;
+    string sender  =2;
+    string method  =3;
+    string key     =4;
+    bytes payload  =5;
+}
+
+//protoc -I=$GOPATH/src:. --go_out=. *.proto
