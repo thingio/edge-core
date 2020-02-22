@@ -15,7 +15,7 @@ import (
 
 type DatahubClient struct {
 	*talk.TClient
-	NodeId  string
+	NodeId string
 }
 
 func NewDatahubClient(cfg conf.MqttConfig, serviceId service.ServiceId, nodeId string) (api.DatahubApi, error) {
@@ -45,7 +45,7 @@ func (dc *DatahubClient) GetResource(kind resource.Kind, id string) (*resource.R
 	if rsp.Method == talkpb.MethodERR {
 		return nil, errors.New(string(rsp.Payload))
 	} else if rsp.Method == talkpb.MethodRSP {
-		r, err := UnmarshalResource(kind, rsp.Payload)
+		r, err := resource.UnmarshalResource(kind, rsp.Payload)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +75,7 @@ func (dc *DatahubClient) ListResources(kind resource.Kind) ([]*resource.Resource
 	if rsp.Method == talkpb.MethodERR {
 		return nil, errors.New(string(rsp.Payload))
 	} else if rsp.Method == talkpb.MethodRSP {
-		rs, err := UnmarshalResourceList(kind, rsp.Payload)
+		rs, err := resource.UnmarshalResourceList(kind, rsp.Payload)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +95,7 @@ func (dc *DatahubClient) WatchResource(kind resource.Kind, watcher api.ResourceW
 
 	for tmsg := range tmsgCh {
 		if tmsg.Sender != dc.TClient.ClientId() { // ignore the change made by client itself
-			res, err := UnmarshalResource(kind, tmsg.Payload)
+			res, err := resource.UnmarshalResource(kind, tmsg.Payload)
 			if err != nil {
 				return err
 			}
@@ -109,7 +109,7 @@ func (dc *DatahubClient) SaveResource(r *resource.Resource) error {
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodPUB
 	msg.Key = talkpb.TMessageDataKey(dc.NodeId, r.Kind, r.Id)
-	payload, err := MarshalResource(r)
+	payload, err := resource.MarshalResource(r)
 	if err != nil {
 		return err
 	}
@@ -127,56 +127,11 @@ func (dc *DatahubClient) DeleteResource(kind resource.Kind, id string) error {
 		Ts:          time.Now().UnixNano(),
 		Version:     0,
 	}
-	payload, err := MarshalResource(emptyRes)
+	payload, err := resource.MarshalResource(emptyRes)
 	if err != nil {
 		return err
 	}
 	msg.Payload = payload
 	_, err = dc.TClient.Send(msg)
 	return err
-}
-
-func MarshalResource(r *resource.Resource) ([]byte, error) {
-	return json.Marshal(r)
-}
-
-func UnmarshalResource(kind resource.Kind, data []byte) (*resource.Resource, error) {
-	r := NewEmptyResource(kind)
-	err := json.Unmarshal(data, r)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
-func UnmarshalResourceList(kind resource.Kind, data []byte) ([]*resource.Resource, error) {
-	r := NewEmptyResource(kind)
-	rs := []*resource.Resource{r}
-	err := json.Unmarshal(data, rs)
-	if err != nil {
-		return nil, err
-	}
-	return rs, nil
-}
-
-
-func NewEmptyResource(resType resource.Kind) *resource.Resource {
-	r := new(resource.Resource)
-	switch resType {
-	case resource.KindNode:
-		r.Value = new(resource.Node)
-	/*case KindPipeline:
-		r.Value = new(resource.Pipeline)
-	case KindTask:
-		r.Value = new(resource.Task)
-	case KindModel:
-		r.Value = new(resource.Model)
-	case KindFunction:
-		r.Value = new(resource.Function)
-	case KindDevice:
-		r.Value = new(resource.Device)*/
-	default:
-		log.Fatalf("%s not support yet\n", resType)
-	}
-	return r
 }

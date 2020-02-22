@@ -8,7 +8,6 @@ import (
 	talkpb "github.com/thingio/edge-core/common/proto/talk"
 	"github.com/thingio/edge-core/common/service"
 	"github.com/thingio/edge-core/common/talk"
-	"github.com/thingio/edge-core/common/toolkit"
 	"github.com/thingio/edge-core/datahub/conf"
 	"time"
 )
@@ -43,7 +42,7 @@ func GetResource(key resource.ResourceKey) (interface{}, error) {
 	if key.Kind == resource.KindNode {
 		return &resource.Resource{
 			ResourceKey: key,
-			Value:       toolkit.NodeData(conf.Config.NodeId),
+			Value:       NodeData(conf.Config.NodeId),
 			Ts:          time.Now().UnixNano(),
 			Version:     1,
 		}, nil
@@ -70,7 +69,15 @@ func reqHandler(function string, payload []byte) (i []byte, e error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(rsp)
+
+	switch v := rsp.(type) {
+	case *resource.Resource:
+		return resource.MarshalResource(v)
+	case []*resource.Resource:
+		return resource.MarshalResourceList(v)
+	default:
+		return json.Marshal(rsp)
+	}
 }
 
 func Save(kind resource.Kind, data interface{}) {

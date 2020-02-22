@@ -1,6 +1,8 @@
 package client
 
 import (
+	"encoding/binary"
+	"fmt"
 	"github.com/thingio/edge-core/common/proto/resource"
 	"github.com/thingio/edge-core/common/service"
 	"github.com/thingio/edge-core/datahub/conf"
@@ -25,4 +27,12 @@ func TestNode(t *testing.T) {
 	}
 
 	t.Logf("get node resource: %+v", res)
+}
+
+func TestIntByte(t *testing.T) {
+	var vi uint64 = 10000000000000
+	data := make([]byte,8)
+	binary.BigEndian.PutUint64(data, vi)
+	vo := binary.BigEndian.Uint64(data)
+	fmt.Println(vo)
 }

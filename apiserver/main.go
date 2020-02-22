@@ -2,27 +2,25 @@ package main
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/thingio/edge-core/common/conf"
-	"github.com/thingio/edge-core/gateway/service"
-	"log"
+	"github.com/thingio/edge-core/apiserver/conf"
+	"github.com/thingio/edge-core/apiserver/service"
+	"github.com/thingio/edge-core/common/log"
 	"net/http"
 )
 
-type Config struct {
-	NodeId string `yaml:"node_id"`
-	Server struct {
-		Addr   string `yaml:"addr"`
-	} `yaml:"server"`
-}
-
-var config = Config{}
-
 func init() {
-	conf.LoadConfig(&config, "etc/edge.yaml")
+	conf.Load("etc/apiserver.yaml")
+	log.Init(conf.Config.Log)
 }
 
 func main() {
+	MountAPI()
+	err := http.ListenAndServe(conf.Config.Server.Addr, nil)
+	log.WithError(err).Fatal("Failed to start apiserver server")
+}
+
+var API_ROOT = "/api/v1"
+func MountAPI() {
+	restful.Add(service.NewResourceAPI(API_ROOT))
 	restful.Add(service.NewEdgeSwaggerAPI("/apidocs"))
-	err := http.ListenAndServe(config.Server.Addr, nil)
-	log.Panic("Failed to start apiserver server:", err)
 }

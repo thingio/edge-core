@@ -15,7 +15,7 @@ func NewTMessage() *TMessage {
 const TMessageChatPrefix = "/TCHAT"
 const TMessageDataPrefix = "/TDATA"
 
-// if Method=MethodREQ/MethodRSP/MethodERR, then Key=/tchan/{node}/{service}/{function}, for a pair of MethodREQ/MethodRSP or MethodREQ/MethodERR, their Id will be the same
+// if Method=MethodREQ/MethodRSP/MethodERR, then Key=/tchan/{node}/{service}/{function}, for a pair of MethodREQ/MethodRSP or MethodREQ/MethodERR, their GetId will be the same
 func TMessageChatKey(nodeId string, service service.ServiceId, function service.ServiceFunction) string {
 	return TMessageChatPrefix + fmt.Sprintf("/%s/%s/%s", nodeId, service, function)
 }

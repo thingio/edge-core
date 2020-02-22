@@ -1,0 +1,18 @@
+node_id: "my-node"
+
+server:
+  addr: ":10080"
+
+mqtt:
+  broker_addr: "127.0.0.1:1883"
+  qos: 1
+  connect_timeout_ms: 1000
+  request_timeout_ms: 1000
+
+log:
+  console: true
+  path: log/datahub.log
+  level: debug
+  module: datahub
+
+
