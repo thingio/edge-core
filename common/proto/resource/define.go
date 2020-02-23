@@ -32,19 +32,19 @@ type IdObject interface {
 func (k Kind) NewObject(id string) IdObject {
 	switch k {
 	case KindNode:
-		return &Node{Id: id}
+		return Node{Id: id}
 	case KindPipeline:
-		return &Pipeline{Id: id}
+		return Pipeline{Id: id}
 	case KindPipeTask:
-		return &PipeTask{Id: id}
+		return PipeTask{Id: id}
 	case KindApplet:
-		return &Applet{Id: id}
+		return Applet{Id: id}
 	case KindFunclet:
-		return &Funclet{Id: id}
+		return Funclet{Id: id}
 	case KindServlet:
-		return &Servlet{Id: id}
+		return Servlet{Id: id}
 	case KindDevice:
-		return &Device{Id: id}
+		return Device{Id: id}
 	default:
 		log.Fatalf("%s not support yet\n", k)
 	}

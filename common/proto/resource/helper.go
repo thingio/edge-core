@@ -34,7 +34,7 @@ func MarshalResourceList(rs []*Resource) ([]byte, error) {
 func UnmarshalResourceList(kind Kind, data []byte) ([]*Resource, error) {
 	count := int(binary.BigEndian.Uint64(data[:8]))
 	rs := make([]*Resource, count)
-	for i := 1; i < count; i++ {
+	for i := 0; i < count; i++ {
 		rs[i] = kind.NewEmptyResource()
 	}
 

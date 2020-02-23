@@ -40,7 +40,7 @@ var handlers = map[service.ServiceFunction]func(key resource.ResourceKey) (inter
 func GetResource(key resource.ResourceKey) (interface{}, error) {
 	log.Infof("receive get call: %+v", key)
 	if key.Kind == resource.KindNode {
-		return &resource.Resource{
+		return &resource.Resource {
 			ResourceKey: key,
 			Value:       NodeData(conf.Config.NodeId),
 			Ts:          time.Now().UnixNano(),
@@ -49,11 +49,11 @@ func GetResource(key resource.ResourceKey) (interface{}, error) {
 	}
 
 	// TODO: should support device/pipeline/task/model/function
-	return nil, nil
+	return nil, errors.NotFoundf("resource %v", key)
 }
 
 func ListResource(key resource.ResourceKey) (interface{}, error) {
-	return nil, nil
+	return nil, errors.NotFoundf("resource %v", key)
 }
 
 func reqHandler(function string, payload []byte) (i []byte, e error) {

@@ -13,10 +13,10 @@ import (
 func AddNodeWebService(cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
 	api := &nodeAPI{cli}
 	apiTags := []string{string(resource.KindNode)}
-
+	sample := resource.KindNode.NewObject("")
 	ws.Route(ws.GET("/node").To(api.GetNode).
 		Doc("get current node info").Metadata(restfulspec.KeyOpenAPITags, apiTags).
-		Writes(resource.Node{}))
+		Returns(200, "OK", sample))
 	return ws
 }
 
@@ -38,36 +38,36 @@ func AddResourceWebService(kind resource.Kind, cli api.DatahubApi, ws *restful.W
 
 	crudApi := &crudResourceAPI{kind, cli}
 
-	singleUrl := fmt.Sprintf("/%s/{id}", kind)
-	pluralUrl := fmt.Sprintf("/%s", kind)
+	url := fmt.Sprintf("/%ss", kind)
+	idUrl := fmt.Sprintf("/%ss/{id}", kind)
 
-	resourceSample := kind.NewEmptyResource()
+	sample := kind.NewObject("")
+	samples := []interface{}{sample}
 	keySample := new(resource.ResourceKey)
 
 	apiTags := []string{string(kind)}
 
-	ws.Route(ws.GET(singleUrl).To(crudApi.Get).
+	ws.Route(ws.GET(idUrl).To(crudApi.Get).
 		Doc(fmt.Sprintf("get %s by id", kind)).Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Param(ws.PathParameter("id", string(kind)+" id").DataType("string")).
-		Writes(resourceSample))
+		Returns(200, "OK", sample))
 
-	ws.Route(ws.GET(pluralUrl).To(crudApi.List).
+	ws.Route(ws.GET(url).To(crudApi.List).
 		Doc(fmt.Sprintf("list %s", kind)).Metadata(restfulspec.KeyOpenAPITags, apiTags).
-		Reads(resourceSample).
-		Writes(keySample))
+		Writes(samples))
 
-	ws.Route(ws.POST(pluralUrl).To(crudApi.Create).
+	ws.Route(ws.POST(url).To(crudApi.Create).
 		Doc(fmt.Sprintf("create %s", kind)).Metadata(restfulspec.KeyOpenAPITags, apiTags).
-		Reads(resourceSample).
+		Reads(sample).
 		Writes(keySample))
 
-	ws.Route(ws.POST(singleUrl).To(crudApi.Update).
+	ws.Route(ws.POST(idUrl).To(crudApi.Update).
 		Doc(fmt.Sprintf("update %s by id", kind)).Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Param(ws.PathParameter("id", string(kind)+" id").DataType("string")).
-		Reads(resourceSample).
+		Reads(sample).
 		Writes(keySample))
 
-	ws.Route(ws.DELETE(singleUrl).To(crudApi.Delete).
+	ws.Route(ws.DELETE(idUrl).To(crudApi.Delete).
 		Doc(fmt.Sprintf("delete %s by id", kind)).Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Param(ws.PathParameter("id", string(kind)+" id").DataType("string")).
 		Writes(keySample))
@@ -87,16 +87,20 @@ func (this *crudResourceAPI) Get(request *restful.Request, response *restful.Res
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeaderAndEntity(http.StatusOK, r)
+	response.WriteHeaderAndEntity(http.StatusOK, r.Value)
 }
 
 func (this *crudResourceAPI) List(request *restful.Request, response *restful.Response) {
-	r, err := this.Client.ListResources(this.Kind)
+	rs, err := this.Client.ListResources(this.Kind)
 	if err != nil {
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeaderAndEntity(http.StatusOK, r)
+	result := make([]interface{}, len(rs))
+	for _, r := range rs {
+		result = append(result, r.Value)
+	}
+	response.WriteHeaderAndEntity(http.StatusOK, result)
 }
 
 func (this *crudResourceAPI) Create(request *restful.Request, response *restful.Response) {

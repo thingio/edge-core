@@ -62,28 +62,27 @@ type Device struct {
 	Id      string            `json:"id,omitempty"`
 	Name    string            `json:"name,omitempty"`
 	Product string            `json:"product,omitempty"`
-	Props   map[string]string `json:"Props,omitempty"`
+	Props   map[string]string `json:"props,omitempty"`
 }
 
 func (t Device) GetId() string   { return t.Id }
 func (t Device) SetId(id string) { t.Id = id }
 
-
 type Pipeline struct {
-	Id       string    `json:"id,omitempty"`
-	Type     string    `json:"type,omitempty"`
-	Name     string    `json:"name,omitempty"`
-	BodyDef  string    `json:"body_def,omitempty"`
-	ArgDefs  []ArgBind `json:"arg_defs,omitempty"`
+	Id      string    `json:"id,omitempty"`
+	Type    string    `json:"type,omitempty"`
+	Name    string    `json:"name,omitempty"`
+	BodyDef string    `json:"body_def,omitempty"`
+	ArgDefs []ArgBind `json:"arg_defs,omitempty"`
 }
 
 func (t Pipeline) GetId() string   { return t.Id }
 func (t Pipeline) SetId(id string) { t.Id = id }
 
 type PipeTask struct {
-	Id           string            `json:"id,omitempty"`
-	PipelineId   string            `json:"pipeline_id,omitempty"`
-	PipelineType string            `json:"type,omitempty"`
+	Id           string            `json:"id,omitempty"`   			// task id
+	PipelineId   string            `json:"pipeline_id,omitempty"`	// related pipeline id
+	PipelineType string            `json:"type,omitempty"`			// related pipeline type: media
 	Name         string            `json:"name,omitempty"`
 	Body         string            `json:"body,omitempty"`
 	Args         map[string]string `json:"args,omitempty"`
@@ -93,7 +92,7 @@ func (t PipeTask) GetId() string   { return t.Id }
 func (t PipeTask) SetId(id string) { t.Id = id }
 
 type ArgBind struct {
-	Id   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	Type string `json:"type,omitempty"`
+	Id      string `json:"id,omitempty"`      // arg id
+	Name    string `json:"name,omitempty"`    // arg name
+	Type    string `json:"type,omitempty"`    // arg type for frontend to render corresponding input style
 }

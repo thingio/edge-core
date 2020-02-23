@@ -35,13 +35,11 @@ func (dc *DatahubClient) GetResource(kind resource.Kind, id string) (*resource.R
 		return nil, err
 	}
 	msg.Payload = payload
-	rspCh, err := dc.TClient.Send(msg)
+	rsp, err := dc.TClient.Send(msg)
 	if err != nil {
 		return nil, err
 	}
-	defer close(rspCh)
 
-	rsp := <-rspCh
 	if rsp.Method == talkpb.MethodERR {
 		return nil, errors.New(string(rsp.Payload))
 	} else if rsp.Method == talkpb.MethodRSP {
@@ -65,13 +63,11 @@ func (dc *DatahubClient) ListResources(kind resource.Kind) ([]*resource.Resource
 		return nil, err
 	}
 	msg.Payload = payload
-	rspCh, err := dc.TClient.Send(msg)
+	rsp, err := dc.TClient.Send(msg)
 	if err != nil {
 		return nil, err
 	}
-	defer close(rspCh)
 
-	rsp := <-rspCh
 	if rsp.Method == talkpb.MethodERR {
 		return nil, errors.New(string(rsp.Payload))
 	} else if rsp.Method == talkpb.MethodRSP {
