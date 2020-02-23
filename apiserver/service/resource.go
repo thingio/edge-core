@@ -13,7 +13,7 @@ import (
 func AddNodeWebService(cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
 	api := &nodeAPI{cli}
 	apiTags := []string{string(resource.KindNode)}
-	sample := resource.KindNode.NewObject("")
+	sample := resource.KindNode.NewSample("")
 	ws.Route(ws.GET("/node").To(api.GetNode).
 		Doc("get current node info").Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Returns(200, "OK", sample))
@@ -41,9 +41,9 @@ func AddResourceWebService(kind resource.Kind, cli api.DatahubApi, ws *restful.W
 	url := fmt.Sprintf("/%ss", kind)
 	idUrl := fmt.Sprintf("/%ss/{id}", kind)
 
-	sample := kind.NewObject("")
+	sample := kind.NewSample("")
 	samples := []interface{}{sample}
-	keySample := new(resource.ResourceKey)
+	keySample := new(resource.Key)
 
 	apiTags := []string{string(kind)}
 
@@ -97,8 +97,8 @@ func (this *crudResourceAPI) List(request *restful.Request, response *restful.Re
 		return
 	}
 	result := make([]interface{}, len(rs))
-	for _, r := range rs {
-		result = append(result, r.Value)
+	for i, r := range rs {
+		result[i] = r.Value
 	}
 	response.WriteHeaderAndEntity(http.StatusOK, result)
 }
@@ -109,13 +109,13 @@ func (this *crudResourceAPI) Create(request *restful.Request, response *restful.
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	r.ResourceKey.NodeId = conf.Config.NodeId
+	r.Key.NodeId = conf.Config.NodeId
 	err := this.Client.SaveResource(r)
 	if err != nil {
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeaderAndEntity(http.StatusOK, r.ResourceKey)
+	response.WriteHeaderAndEntity(http.StatusOK, r.Key)
 }
 
 func (this *crudResourceAPI) Update(request *restful.Request, response *restful.Response) {
@@ -125,13 +125,13 @@ func (this *crudResourceAPI) Update(request *restful.Request, response *restful.
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	r.ResourceKey.NodeId = conf.Config.NodeId
+	r.Key.NodeId = conf.Config.NodeId
 	err := this.Client.SaveResource(r)
 	if err != nil {
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeaderAndEntity(http.StatusOK, r.ResourceKey)
+	response.WriteHeaderAndEntity(http.StatusOK, r.Key)
 }
 
 func (this *crudResourceAPI) Delete(request *restful.Request, response *restful.Response) {
@@ -141,5 +141,5 @@ func (this *crudResourceAPI) Delete(request *restful.Request, response *restful.
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
-	response.WriteHeaderAndEntity(http.StatusOK, resource.ResourceKey{conf.Config.NodeId, this.Kind, id})
+	response.WriteHeaderAndEntity(http.StatusOK, resource.Key{conf.Config.NodeId, this.Kind, id})
 }

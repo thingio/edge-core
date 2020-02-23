@@ -11,9 +11,13 @@ import (
 
 type MqttConfig struct {
 	BrokerAddr       string `yaml:"broker_addr"`
-	QoS              byte    `yaml:"qos"`
 	ConnectTimeoutMS int    `yaml:"connect_timeout_ms"`
 	RequestTimeoutMS int    `yaml:"request_timeout_ms"`
+}
+
+type DBConfig struct {
+	File      string `yaml:"file"`
+	TimeoutMS int    `yaml:"timeout_ms"`
 }
 
 func LoadConfig(dest interface{}, defaultConfig string) {

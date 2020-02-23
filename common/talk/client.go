@@ -53,7 +53,6 @@ func NewTClient(c conf.MqttConfig, clientId string, tchanPrefix string) *TClient
 	return &TClient{
 		clientId:    clientId,
 		client:      mqtt.NewClient(mqttOpts),
-		qos:         c.QoS,
 		timeout:     time.Duration(c.RequestTimeoutMS) * time.Millisecond,
 		callQueue:   make(map[string]chan *talk.TMessage),
 		tchanPrefix: tchanPrefix,
@@ -122,7 +121,7 @@ func (t *TClient) callHandler(cli mqtt.Client, msg mqtt.Message) {
 			reply.Method = talk.MethodRSP
 			reply.Payload = rsp
 		}
-		if _, err = t.Send(reply); err != nil {
+		if err = t.send(reply, 0); err != nil {
 			log.Errorf("invalid req key %s, ignore msg: %+v", tmsg.Key, msg)
 		}
 		return
@@ -150,7 +149,7 @@ func (t *TClient) Send(tmsg *talk.TMessage) (*talk.TMessage, error) {
 		t.callQueue[tmsg.Id] = rspCh
 		defer delete(t.callQueue, tmsg.Id)
 
-		err := t.send(tmsg)
+		err := t.send(tmsg, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -164,10 +163,10 @@ func (t *TClient) Send(tmsg *talk.TMessage) (*talk.TMessage, error) {
 		}
 	}
 
-	return nil, t.send(tmsg)
+	return nil, t.send(tmsg, t.qos)
 }
 
-func (t *TClient) send(tmsg *talk.TMessage) error {
+func (t *TClient) send(tmsg *talk.TMessage, qos byte) error {
 
 	log.Infof("sending tmsg: {%+v}", tmsg)
 	tmsg.Sender = t.clientId
@@ -178,7 +177,7 @@ func (t *TClient) send(tmsg *talk.TMessage) error {
 		return err
 	}
 
-	tk := t.client.Publish(tmsg.Key, t.qos, false, data)
+	tk := t.client.Publish(tmsg.Key, qos, false, data)
 	tk.Wait()
 	if err := tk.Error(); err != nil {
 		log.Errorf("send tmsg failed: %+v", tmsg)

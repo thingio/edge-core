@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"github.com/thingio/edge-core/common/toolkit"
 	"log"
 )
@@ -29,22 +30,44 @@ type IdObject interface {
 	SetId(id string)
 }
 
-func (k Kind) NewObject(id string) IdObject {
+func (k Kind) NewSample(id string) IdObject {
 	switch k {
 	case KindNode:
 		return Node{Id: id}
 	case KindPipeline:
-		return Pipeline{Id: id}
+		return Pipeline{Id: id, ArgDefs: make([]ArgBind, 0)}
 	case KindPipeTask:
-		return PipeTask{Id: id}
+		return PipeTask{Id: id, Args: make(map[string]string, 0)}
 	case KindApplet:
 		return Applet{Id: id}
 	case KindFunclet:
 		return Funclet{Id: id}
 	case KindServlet:
-		return Servlet{Id: id}
+		return Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}
 	case KindDevice:
-		return Device{Id: id}
+		return Device{Id: id, Props: make(map[string]string, 0)}
+	default:
+		log.Fatalf("%s not support yet\n", k)
+	}
+	return nil
+}
+
+func (k Kind) NewObject(id string) IdObject {
+	switch k {
+	case KindNode:
+		return &Node{Id: id}
+	case KindPipeline:
+		return &Pipeline{Id: id, ArgDefs: make([]ArgBind, 0)}
+	case KindPipeTask:
+		return &PipeTask{Id: id, Args: make(map[string]string, 0)}
+	case KindApplet:
+		return &Applet{Id: id}
+	case KindFunclet:
+		return &Funclet{Id: id}
+	case KindServlet:
+		return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}
+	case KindDevice:
+		return &Device{Id: id, Props: make(map[string]string, 0)}
 	default:
 		log.Fatalf("%s not support yet\n", k)
 	}
@@ -62,25 +85,29 @@ func (k Kind) NewResource() *Resource {
 
 func (k Kind) NewResourceWithId(id string) *Resource {
 	obj := k.NewObject(id)
-	key := ResourceKey{Kind: k, Id: id}
-	return &Resource{ResourceKey: key, Value: obj, Ts: toolkit.Now(), Version: 1}
+	key := Key{Kind: k, Id: id}
+	return &Resource{Key: key, Value: obj, Ts: toolkit.Now(), Version: 1}
 }
 
-type ResourceKey struct {
+type Key struct {
 	NodeId string `json:"node_id,omitempty"`
 	Kind   Kind   `json:"kind,omitempty"`
 	Id     string `json:"id,omitempty"`
 }
 
+func (k Key) String() string {
+	return fmt.Sprintf("/%s/%s/%s", k.NodeId, k.Kind, k.Id)
+}
+
 type Resource struct {
-	ResourceKey
+	Key
 	Value   interface{} `json:"value,omitempty"`
 	Ts      int64       `json:"ts,omitempty"`
 	Version int64       `json:"version,omitempty"`
 }
 
 type ResourceStatus struct {
-	ResourceKey
+	Key
 	Status IdObject `json:"status,omitempty"`
 	Ts     int64    `json:"ts,omitempty"`
 }
