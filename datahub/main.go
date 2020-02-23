@@ -11,6 +11,7 @@ func init() {
 }
 
 func main() {
-	err := server.Start()
+	s := server.NewDatahubServer(conf.Config)
+	err := s.Start()
 	log.WithError(err).Errorf("fail to start server")
 }

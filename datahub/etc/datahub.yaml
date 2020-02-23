@@ -11,3 +11,7 @@ log:
   path: log/datahub.log
   level: debug
   module: datahub
+
+db:
+  file: "data/resource.db"
+  timeout_ms: 1000

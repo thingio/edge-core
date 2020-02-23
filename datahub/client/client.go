@@ -30,7 +30,7 @@ func (dc *DatahubClient) GetResource(kind resource.Kind, id string) (*resource.R
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodREQ
 	msg.Key = talkpb.TMessageChatKey(dc.NodeId, service.DataHub, service.FuncGet)
-	payload, err := json.Marshal(resource.ResourceKey{dc.NodeId, kind, id})
+	payload, err := json.Marshal(resource.Key{dc.NodeId, kind, id})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (dc *DatahubClient) ListResources(kind resource.Kind) ([]*resource.Resource
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodREQ
 	msg.Key = talkpb.TMessageChatKey(dc.NodeId, service.DataHub, service.FuncList)
-	payload, err := json.Marshal(resource.ResourceKey{NodeId: dc.NodeId, Kind: kind})
+	payload, err := json.Marshal(resource.Key{NodeId: dc.NodeId, Kind: kind})
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,9 @@ func (dc *DatahubClient) DeleteResource(kind resource.Kind, id string) error {
 	msg.Method = talkpb.MethodPUB
 	msg.Key = talkpb.TMessageDataKey(dc.NodeId, kind, id)
 	emptyRes := &resource.Resource{
-		ResourceKey: resource.ResourceKey{dc.NodeId, kind, id},
-		Ts:          time.Now().UnixNano(),
-		Version:     0,
+		Key:     resource.Key{dc.NodeId, kind, id},
+		Ts:      time.Now().UnixNano(),
+		Version: 0,
 	}
 	payload, err := resource.MarshalResource(emptyRes)
 	if err != nil {
