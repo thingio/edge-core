@@ -1,6 +1,6 @@
 # 参数配置
-runner: &runner thingio
-go-version: &go-version 1.13
+&runner thingio
+&go-version 1.13
 
 
 name: Build and Test
