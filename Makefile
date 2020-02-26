@@ -1,17 +1,17 @@
 PROJECT_NAME := "edge-core"
 WORK_DIR ?= apiserver
-PKG_LIST := $(shell cd ${WORK_DIR} && go list ./... | grep -v /vendor/)
+IMAGE ?= xiao4er/thingio:${WORK_DIR}-latest
+PKG_LIST := $(cd ${WORK_DIR} && go list ./... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 GOSUMDB := "off"
 GOPROXY := "https://goproxy.cn/,https://goproxy.io/,https://mirrors.aliyun.com/goproxy,http://172.16.11.155:3000"
 .PHONY: all dep build clean test coverage coverhtml lint
+TOKEN := 39797b23-c6fe-4bac-97a9-de4d9f1c540b
 
 all: build
 
-work: ## cd work directory
-	@
 lint: ## Lint the files
-	@cd ${WORK_DIR} && golint ${PKG_LIST}
+	cd ${WORK_DIR} && golint ${PKG_LIST}
 
 test: ## Run unittests
 	@cd ${WORK_DIR} && go test -short ${PKG_LIST}
@@ -34,8 +34,9 @@ dep: ## Get the dependencies
 build: dep ## Build the binary file
 	@cd ${WORK_DIR} && go build -i -v .
 
-clean: ## Remove previous build
-	@rm -rf ${WORK_DIR}
+login:
+	@echo ${TOKEN} | docker login -u xiao4er --password-stdin
 
-help: ## Display this help screen
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+build-image: build login
+	@cd ${WORK_DIR}; docker build -t ${IMAGE} .; docker push ${IMAGE}
+
