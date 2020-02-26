@@ -7,50 +7,9 @@ on:
 
 jobs:
 
-#  lint:
-#    name: Lint
-#    runs-on: thingio
-#    steps:
-#      - name: Set up Go
-#        uses: actions/setup-go@v1
-#        with:
-#          go-version: 1.13.8
-#
-#      - name: Check out code
-#        uses: actions/checkout@v1
-#
-#      - name: Lint Go Code
-#        run: |
-#          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-#          go get -u golang.org/x/lint/golint
-#          make lint
-#        working-directory: ./apiserver
-#
-#  test:
-#    name: Test
-#    runs-on: thingio
-#    steps:
-#      - name: Set up Go
-#        uses: actions/setup-go@v1
-#        with:
-#          go-version: 1.13.8
-#
-#      - name: Check out code
-#        uses: actions/checkout@v1
-#
-#      - name: Run Unit tests.
-#        run: make test-coverage
-#
-#      - name: Upload Coverage report to CodeCov
-#        uses: codecov/codecov-action@v1.0.0
-#        with:
-#          token: ${{secrets.CODECOV_TOKEN}}
-#          file: ./coverage.txt
-
-  build:
-    name: Build
+  lint:
+    name: Lint
     runs-on: thingio
-#    needs: [lint, test]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
@@ -60,6 +19,54 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Build
-        run: pwd
-        working-directory: [./apiserver, bootman]
+      - name: Lint Go Code
+        run: bash make_for_each.sh lint
+
+  test:
+    name: Test
+    runs-on: thingio
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.8
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Run Unit tests.
+        run: bash make_for_each.sh test
+
+      - name: Compute coverage
+        run: bash make_for_each.sh coverhtml
+
+  build:
+    name: Build
+    runs-on: thingio
+    needs: [lint, test]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.8
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Build apiserver
+        run: make WORK_DIR=apiserver build
+
+      - name: Build bootman
+        run: make WORK_DIR=bootman build
+
+      - name: Build datahub
+        run: make WORK_DIR=datahub build
+
+      - name: Build deviceman
+        run: make WORK_DIR=deviceman build
+
+      - name: Build funcman
+        run: make WORK_DIR=funcman build
+
+      - name: Build pipeman
+        run: make WORK_DIR=pipeman build
