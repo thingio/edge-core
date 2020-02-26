@@ -1,8 +1,3 @@
-# 参数配置
-&runner thingio
-&go-version 1.13
-
-
 name: Build and Test
 on:
   push:
@@ -12,57 +7,59 @@ on:
 
 jobs:
 
-  lint:
-    name: Lint
-    runs-on: *runner
-    steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: *go-version
-
-      - name: Check out code
-        uses: actions/checkout@v1
-
-      - name: Lint Go Code
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-          go get -u golang.org/x/lint/golint
-          make lint
-
-  test:
-    name: Test
-    runs-on: *runner
-    steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: *go-version
-
-      - name: Check out code
-        uses: actions/checkout@v1
-
-      - name: Run Unit tests.
-        run: make test-coverage
-
-      - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v1.0.0
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage.txt
+#  lint:
+#    name: Lint
+#    runs-on: thingio
+#    steps:
+#      - name: Set up Go
+#        uses: actions/setup-go@v1
+#        with:
+#          go-version: 1.13.8
+#
+#      - name: Check out code
+#        uses: actions/checkout@v1
+#
+#      - name: Lint Go Code
+#        run: |
+#          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
+#          go get -u golang.org/x/lint/golint
+#          make lint
+#        working-directory: ./apiserver
+#
+#  test:
+#    name: Test
+#    runs-on: thingio
+#    steps:
+#      - name: Set up Go
+#        uses: actions/setup-go@v1
+#        with:
+#          go-version: 1.13.8
+#
+#      - name: Check out code
+#        uses: actions/checkout@v1
+#
+#      - name: Run Unit tests.
+#        run: make test-coverage
+#
+#      - name: Upload Coverage report to CodeCov
+#        uses: codecov/codecov-action@v1.0.0
+#        with:
+#          token: ${{secrets.CODECOV_TOKEN}}
+#          file: ./coverage.txt
 
   build:
     name: Build
-    runs-on: *runner
-    needs: [lint, test]
+    runs-on: thingio
+#    needs: [lint, test]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: *go-version
+          go-version: 1.13.8
 
       - name: Check out code
         uses: actions/checkout@v1
 
       - name: Build
-        run: make build
+        run: pwd
+        working-directory: [./apiserver, bootman]
