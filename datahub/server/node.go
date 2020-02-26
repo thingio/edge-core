@@ -13,11 +13,26 @@ import (
 )
 
 func NodeData(nodeId string) *resource.Node {
-
 	node := new(resource.Node)
 	node.Id = nodeId
 
-	node.Stats = map[string]string{}
+	var osVersion string
+	if os, err := sys.GetOSVersion(); err == nil {
+		osVersion = os
+	} else {
+		log.WithError(err).Error("Fail to get os version")
+	}
+
+	node.Os = osVersion
+	node.Kernel, _ = sys.UnameKernel()
+	node.Arch = runtime.GOARCH
+
+	return node
+}
+
+func NodeState(nodeId string) *resource.State {
+	node := resource.State{}
+	node["id"] = nodeId
 
 	var mem, memUsage string
 	sysInfo := new(syscall.Sysinfo_t)
@@ -35,29 +50,17 @@ func NodeData(nodeId string) *resource.Node {
 		log.WithError(err).Error("Fail to get cpu usage")
 	}
 
-	var osVersion string
-	if os, err := sys.GetOSVersion(); err == nil {
-		osVersion = os
-	} else {
-		log.WithError(err).Error("Fail to get os version")
-	}
-
-	kernelVersion, _ := sys.UnameKernel()
 	gpu, _ := sys.GetGpu()
 	localtime, _ := sys.Date()
 
-	node.Os = osVersion
-	node.Kernel = kernelVersion
-	node.Arch = runtime.GOARCH
+	node["local_time"] = strings.TrimSpace(localtime)
+	node["boot_time"] = fmt.Sprint(toolkit.NowMS() - sysInfo.Uptime*1e3)
 
-	node.LocalTime = strings.TrimSpace(localtime)
-	node.BootTime = toolkit.NowMS() - sysInfo.Uptime*1e3
+	node["mem"] = mem
+	node["mem_usage"] = memUsage
+	node["cpu"] = fmt.Sprint(runtime.NumCPU())
+	node["cpu_usage"] = cpuUsage
+	node["gpu"] = fmt.Sprint(gpu)
 
-	node.Stats["mem"] = mem
-	node.Stats["mem_usage"] = memUsage
-	node.Stats["cpu"] = fmt.Sprint(runtime.NumCPU())
-	node.Stats["cpu_usage"] = cpuUsage
-	node.Stats["gpu"] = fmt.Sprint(gpu)
-
-	return node
+	return &node
 }

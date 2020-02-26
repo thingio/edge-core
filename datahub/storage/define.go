@@ -3,7 +3,6 @@ package storage
 import (
 	"github.com/thingio/edge-core/common/conf"
 	"github.com/thingio/edge-core/common/proto/resource"
-	"time"
 )
 
 type ResourceStorage interface {
@@ -14,5 +13,5 @@ type ResourceStorage interface {
 }
 
 func NewResourceStorage(config conf.DBConfig) ResourceStorage{
-	return &BoltStorage{File:config.File, Timeout: time.Duration(config.TimeoutMS) * time.Millisecond}
+	return &BoltStorage{File:config.File, Timeout: config.Timeout}
 }

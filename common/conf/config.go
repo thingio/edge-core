@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/configor"
 	"os"
@@ -10,14 +11,14 @@ import (
 )
 
 type MqttConfig struct {
-	BrokerAddr       string `yaml:"broker_addr"`
-	ConnectTimeoutMS int    `yaml:"connect_timeout_ms"`
-	RequestTimeoutMS int    `yaml:"request_timeout_ms"`
+	BrokerAddr     string        `json:"broker_addr" yaml:"broker_addr"`
+	ConnectTimeout time.Duration `json:"connect_timeout" yaml:"connect_timeout"`
+	RequestTimeout time.Duration `json:"request_timeout" yaml:"request_timeout"`
 }
 
 type DBConfig struct {
-	File      string `yaml:"file"`
-	TimeoutMS int    `yaml:"timeout_ms"`
+	File    string        `json:"file" yaml:"file"`
+	Timeout time.Duration `json:"timeout" yaml:"timeout"`
 }
 
 func LoadConfig(dest interface{}, defaultConfig string) {
@@ -37,6 +38,10 @@ func LoadConfig(dest interface{}, defaultConfig string) {
 		fmt.Printf("Fail to load config file %s: %s\n", file, err)
 		os.Exit(1)
 	}
+
+
+	data, _ := json.Marshal(dest)
+	fmt.Printf("Config loaded: %s\n", data)
 }
 
 const (

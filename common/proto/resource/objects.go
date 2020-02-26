@@ -5,9 +5,6 @@ type Node struct {
 	Os        string            `json:"os,omitempty"`
 	Kernel    string            `json:"kernel,omitempty"`
 	Arch      string            `json:"arch,omitempty"`
-	BootTime  int64             `json:"boot_time,omitempty"`
-	LocalTime string            `json:"local_time,omitempty"`
-	Stats     map[string]string `json:"stats,omitempty"`
 }
 
 func (t Node) GetId() string   { return t.Id }
@@ -58,19 +55,9 @@ type Applet struct {
 func (t Applet) GetId() string   { return t.Id }
 func (t Applet) SetId(id string) { t.Id = id }
 
-type Device struct {
-	Id      string            `json:"id,omitempty"`
-	Name    string            `json:"name,omitempty"`
-	Product string            `json:"product,omitempty"`
-	Props   map[string]string `json:"props,omitempty"`
-}
-
-func (t Device) GetId() string   { return t.Id }
-func (t Device) SetId(id string) { t.Id = id }
-
 type Pipeline struct {
 	Id      string    `json:"id,omitempty"`
-	Type    string    `json:"type,omitempty"`
+	Genus   string    `json:"genus,omitempty"` // mm or ts
 	Name    string    `json:"name,omitempty"`
 	BodyDef string    `json:"body_def,omitempty"`
 	ArgDefs []ArgBind `json:"arg_defs,omitempty"`
@@ -80,19 +67,63 @@ func (t Pipeline) GetId() string   { return t.Id }
 func (t Pipeline) SetId(id string) { t.Id = id }
 
 type PipeTask struct {
-	Id           string            `json:"id,omitempty"`   			// task id
-	PipelineId   string            `json:"pipeline_id,omitempty"`	// related pipeline id
-	PipelineType string            `json:"type,omitempty"`			// related pipeline type: media
-	Name         string            `json:"name,omitempty"`
-	Body         string            `json:"body,omitempty"`
-	Args         map[string]string `json:"args,omitempty"`
+	Id         string            `json:"id,omitempty"`          // task id
+	PipelineId string            `json:"pipeline_id,omitempty"` // related pipeline id
+	Genus      string            `json:"genus,omitempty"`       // related pipeline type: mm or ts
+	Name       string            `json:"name,omitempty"`
+	Body       string            `json:"body,omitempty"`
+	Args       map[string]string `json:"args,omitempty"`
 }
 
 func (t PipeTask) GetId() string   { return t.Id }
 func (t PipeTask) SetId(id string) { t.Id = id }
 
 type ArgBind struct {
-	Id      string `json:"id,omitempty"`      // arg id
-	Name    string `json:"name,omitempty"`    // arg name
-	Type    string `json:"type,omitempty"`    // arg type for frontend to render corresponding input style
+	Id   string `json:"id,omitempty"`   // arg id
+	Name string `json:"name,omitempty"` // arg name
+	Type string `json:"type,omitempty"` // arg type for frontend to render corresponding input style
+}
+
+type Device struct {
+	Id        string            `json:"id,omitempty"`
+	Genus     string            `json:"genus,omitempty"` // mm or ts
+	Name      string            `json:"name,omitempty"`
+	ProductId string            `json:"product_id,omitempty"`
+	Props     map[string]string `json:"props,omitempty"`
+}
+
+func (t Device) GetId() string   { return t.Id }
+func (t Device) SetId(id string) { t.Id = id }
+
+type DeviceProduct struct {
+	Id         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Genus      string `json:"genus,omitempty"`
+	Desc       string `json:"desc,omitempty"`
+	ProtocolId string `json:"protocol_id,omitempty"`
+}
+
+func (t DeviceProduct) GetId() string   { return t.Id }
+func (t DeviceProduct) SetId(id string) { t.Id = id }
+
+type DeviceProtocol struct {
+	Id         string       `json:"id,omitempty"`
+	Name       string       `json:"name,omitempty"`
+	Genus      string       `json:"genus,omitempty"`
+	Desc       string       `json:"desc,omitempty"`
+	PropFields []*PropField `json:"prop_fields,omitempty"` // DeviceProtocol.PropFields will be use to generate Device.Props
+}
+
+func (t DeviceProtocol) GetId() string   { return t.Id }
+func (t DeviceProtocol) SetId(id string) { t.Id = id }
+
+type PropField struct {
+	Id       string `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Desc     string `json:"desc,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Style    string `json:"style,omitempty"`
+	Default  string `json:"default,omitempty"`
+	Range    string `json:"range,omitempty"` //"true@@自动模式,false@@手动模式"
+	Required bool   `json:"required,omitempty"`
 }

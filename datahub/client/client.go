@@ -26,11 +26,11 @@ func NewDatahubClient(cfg conf.MqttConfig, serviceId service.ServiceId, nodeId s
 	return &DatahubClient{tclient, nodeId}, nil
 }
 
-func (dc *DatahubClient) GetResource(kind resource.Kind, id string) (*resource.Resource, error) {
+func (dc *DatahubClient) GetResource(kind *resource.Kind, id string) (*resource.Resource, error) {
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodREQ
 	msg.Key = talkpb.TMessageChatKey(dc.NodeId, service.DataHub, service.FuncGet)
-	payload, err := json.Marshal(resource.Key{dc.NodeId, kind, id})
+	payload, err := json.Marshal(resource.Key{dc.NodeId, kind.Name, id})
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +54,15 @@ func (dc *DatahubClient) GetResource(kind resource.Kind, id string) (*resource.R
 	}
 }
 
-func (dc *DatahubClient) ListResources(kind resource.Kind) ([]*resource.Resource, error) {
+func (dc *DatahubClient) ListResources(kind *resource.Kind) ([]*resource.Resource, error) {
+	return dc.QueryResources(kind, "")
+}
+
+func (dc *DatahubClient) QueryResources(kind *resource.Kind, idPrefix string) ([]*resource.Resource, error) {
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodREQ
 	msg.Key = talkpb.TMessageChatKey(dc.NodeId, service.DataHub, service.FuncList)
-	payload, err := json.Marshal(resource.Key{NodeId: dc.NodeId, Kind: kind})
+	payload, err := json.Marshal(resource.Key{NodeId: dc.NodeId, Kind: kind.Name, Id: idPrefix})
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,7 @@ func (dc *DatahubClient) ListResources(kind resource.Kind) ([]*resource.Resource
 	}
 }
 
-func (dc *DatahubClient) WatchResource(kind resource.Kind, watcher api.ResourceWatcher) error {
+func (dc *DatahubClient) WatchResource(kind *resource.Kind, watcher api.ResourceWatcher) error {
 	key := talkpb.TMessageDataKey(dc.NodeId, kind, "#")
 	tmsgCh, err := dc.TClient.Watch(key)
 	if err != nil {
@@ -104,7 +108,7 @@ func (dc *DatahubClient) WatchResource(kind resource.Kind, watcher api.ResourceW
 func (dc *DatahubClient) SaveResource(r *resource.Resource) error {
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodPUB
-	msg.Key = talkpb.TMessageDataKey(dc.NodeId, r.Kind, r.Id)
+	msg.Key = talkpb.TMessageDataKey(dc.NodeId, resource.KindOf(r.Kind), r.Id)
 	payload, err := resource.MarshalResource(r)
 	if err != nil {
 		return err
@@ -114,12 +118,12 @@ func (dc *DatahubClient) SaveResource(r *resource.Resource) error {
 	return err
 }
 
-func (dc *DatahubClient) DeleteResource(kind resource.Kind, id string) error {
+func (dc *DatahubClient) DeleteResource(kind *resource.Kind, id string) error {
 	msg := talkpb.NewTMessage()
 	msg.Method = talkpb.MethodPUB
 	msg.Key = talkpb.TMessageDataKey(dc.NodeId, kind, id)
 	emptyRes := &resource.Resource{
-		Key:     resource.Key{dc.NodeId, kind, id},
+		Key:     resource.Key{dc.NodeId, kind.Name, id},
 		Ts:      time.Now().UnixNano(),
 		Version: 0,
 	}

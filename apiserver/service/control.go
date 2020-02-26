@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/thingio/edge-core/common/proto/resource"
@@ -13,15 +14,15 @@ type pipetaskAPI struct {
 
 func AddPipeTaskWebService(cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
 	api := &pipetaskAPI{cli}
-	apiTags := []string{string(resource.KindNode)}
+	apiTags := []string{resource.KindPipeTask.Name}
 
-	ws.Route(ws.POST("/task/{id}/start").To(api.StartTask).
+	ws.Route(ws.POST(fmt.Sprintf("/%s/{id}/start",resource.KindPipeTask.Name)).To(api.StartTask).
 		Doc("get pipeline").Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Writes(resource.Pipeline{}).
 		Returns(200, "OK", resource.Pipeline{}).
 		Returns(404, "Not Found", nil))
 
-	ws.Route(ws.POST("/task/{id}/stop").To(api.StopTask).
+	ws.Route(ws.POST(fmt.Sprintf("/%s/{id}/stop",resource.KindPipeTask.Name)).To(api.StopTask).
 		Doc("get pipeline").Metadata(restfulspec.KeyOpenAPITags, apiTags).
 		Writes(resource.Pipeline{}).
 		Returns(200, "OK", resource.Pipeline{}).

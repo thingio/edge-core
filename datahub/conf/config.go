@@ -6,10 +6,10 @@ import (
 )
 
 type DatahubConfig struct {
-	NodeId string          `yaml:"node_id"`
-	Mqtt   conf.MqttConfig `yaml:"mqtt"`
-	DB     conf.DBConfig   `yaml:"db"`
-	Log    log.Config      `yaml:"log"`
+	NodeId string          `json:"node_id" yaml:"node_id"`
+	Mqtt   conf.MqttConfig `json:"mqtt" yaml:"mqtt"`
+	DB     conf.DBConfig   `json:"db" yaml:"db"`
+	Log    log.Config      `json:"log" yaml:"log"`
 }
 
 var Config DatahubConfig

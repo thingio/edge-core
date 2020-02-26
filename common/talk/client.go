@@ -25,7 +25,7 @@ type TClient struct {
 
 func parseOpts(config conf.MqttConfig) *mqtt.ClientOptions {
 	opts := mqtt.NewClientOptions()
-	opts.SetConnectTimeout(time.Duration(config.ConnectTimeoutMS) * time.Millisecond)
+	opts.SetConnectTimeout(config.ConnectTimeout)
 	opts.AddBroker("tcp://" + config.BrokerAddr)
 	opts.SetAutoReconnect(true)
 	opts.SetKeepAlive(60 * time.Second)
@@ -53,7 +53,7 @@ func NewTClient(c conf.MqttConfig, clientId string, tchanPrefix string) *TClient
 	return &TClient{
 		clientId:    clientId,
 		client:      mqtt.NewClient(mqttOpts),
-		timeout:     time.Duration(c.RequestTimeoutMS) * time.Millisecond,
+		timeout:     c.RequestTimeout,
 		callQueue:   make(map[string]chan *talk.TMessage),
 		tchanPrefix: tchanPrefix,
 	}
@@ -158,7 +158,7 @@ func (t *TClient) Send(tmsg *talk.TMessage) (*talk.TMessage, error) {
 		case res := <-rspCh:
 			return res, nil
 		case <-time.After(t.timeout):
-			log.Errorf("sending tmsg timeout: {%+v}", tmsg)
+			log.Errorf("waiting tmsg timeout: {%+v}", tmsg)
 			return nil, errors.Timeoutf("tmessage %+v", tmsg)
 		}
 	}
