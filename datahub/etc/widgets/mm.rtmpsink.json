@@ -1,0 +1,10 @@
+{
+  "group": "输出",
+  "id": "mm.rtmpsink",
+  "genus": "mm",
+  "name": "rtmp服务器",
+  "desc": "通过RTMP将FLV内容发送到服务器",
+  "upstream": ["*"],
+  "downstream": [],
+  "params": []
+}

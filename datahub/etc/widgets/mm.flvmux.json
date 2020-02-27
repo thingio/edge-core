@@ -1,0 +1,10 @@
+{
+  "group": "复用/解复用",
+  "id": "mm.flvmux",
+  "genus":  "mm",
+  "name": "flv复用器",
+  "desc": "flv格式的复用器",
+  "upstream": ["*"],
+  "downstream": ["*"],
+  "params": []
+}

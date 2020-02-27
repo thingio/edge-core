@@ -1,0 +1,22 @@
+{
+  "group": "输入",
+  "bind_type": "device",
+  "id": "ts.input_device",
+  "genus": "ts",
+  "name": "设备输入",
+  "desc": "接收设备发出的时序数据作为输入",
+  "params": [
+    {
+      "id": "device_product",
+      "name": "时序设备产品",
+      "desc": "选择时序设备产品",
+      "required": true,
+      "style": "selector_dynamic",
+      "type": "string",
+      "range": "name,id@/api/v1/hub/products?category=tick",
+      "default": ""
+    }
+  ],
+  "upstream": [],
+  "downstream": ["*"]
+}

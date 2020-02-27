@@ -3,7 +3,7 @@
   "name": "ONVIF协议",
   "desc": "Open Network Video Interface Forum(开放型网络视频接口论坛)",
   "genus": "mm",
-  "prop_fields": [
+  "params": [
     {
       "id": "ip",
       "desc": "IP地址",

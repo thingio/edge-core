@@ -30,8 +30,9 @@ func NewDatahubServer(config conf.DatahubConfig) *DatahubServer {
 
 var (
 	ResourceDirs = map[*resource.Kind]string{
-		resource.KindProduct:  "etc/products/",
-		resource.KindProtocol: "etc/protocols/",
+		resource.KindProduct:  	"etc/products/",
+		resource.KindProtocol: 	"etc/protocols/",
+		resource.KindWidget: 	"etc/widgets/",
 	}
 )
 

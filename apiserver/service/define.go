@@ -14,11 +14,14 @@ func NewResourceAPI(root string, cli api.DatahubApi) *restful.WebService {
 	for _, k := range resource.AllKinds {
 		if k == resource.KindNode {
 			// Node resource only support Read API
-			ws = AddNodeWebService(cli, ws)
+			ws = AddNodeWS(cli, ws)
 		} else {
 			// Other resource will support CRUD API
-			ws = AddResourceWebService(k, cli, ws)
+			ws = AddResourceWS(k, cli, ws)
 		}
+
+		// Some resource will have summary API to get complete data in once
+		ws = AddResourceSummaryWS(k, cli, ws)
 	}
 
 	return ws

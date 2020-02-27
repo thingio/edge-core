@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func AddNodeWebService(cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
+func AddNodeWS(cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
 	api := &nodeAPI{cli}
 	apiTags := []string{resource.KindNode.Name}
 	sample := resource.KindNode.SampleObject
@@ -54,7 +54,7 @@ func (this *nodeAPI) GetNodeState(request *restful.Request, response *restful.Re
 	response.WriteHeaderAndEntity(http.StatusOK, resource.MakeResourceState(r,s))
 }
 
-func AddResourceWebService(kind *resource.Kind, cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
+func AddResourceWS(kind *resource.Kind, cli api.DatahubApi, ws *restful.WebService) *restful.WebService {
 
 	crudApi := &crudResourceAPI{kind, cli}
 
@@ -141,6 +141,7 @@ func (this *crudResourceAPI) Create(request *restful.Request, response *restful.
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
+	r.Value.(resource.IdObject).SetId(r.Id)
 	r.Key.NodeId = conf.Config.NodeId
 	err := this.Client.SaveResource(r)
 	if err != nil {

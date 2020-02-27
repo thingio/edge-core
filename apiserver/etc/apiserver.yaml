@@ -1,7 +1,7 @@
 node_id: "my-node"
 
 server:
-  addr: ":10080"
+  addr: ":18080"
 
 mqtt:
   broker_addr: "127.0.0.1:1883"

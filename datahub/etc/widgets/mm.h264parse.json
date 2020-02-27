@@ -1,0 +1,10 @@
+{
+  "group": "编/解码",
+  "id": "mm.h264parse",
+  "genus":  "mm",
+  "name": "h264解析器",
+  "desc": "解析h264视频流",
+  "upstream": ["*"],
+  "downstream": ["*"],
+  "params": []
+}

@@ -1,7 +1,7 @@
 {
-  "id": "rtsp",
-  "name": "RTSP协议",
-  "desc": "实时串流协议（Real Time Streaming Protocol，RTSP2）",
+  "id": "rtmp",
+  "name": "RTMP",
+  "desc": "实时消息协议（Real-Time Messaging Protocol，RTMP）",
   "genus": "mm",
   "params": [
     {
@@ -11,6 +11,5 @@
       "style": "input",
       "required": true
     }
-
   ]
 }

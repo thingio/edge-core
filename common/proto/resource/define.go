@@ -26,23 +26,22 @@ var (
 	KindAny      = &Kind{Name: "#", Stateful: false, SampleObject: nil, NewObject: func(id string) IdObject { return nil }}
 	KindNode     = &Kind{Name: "node", Stateful: true, SampleObject: Node{}, NewObject: func(id string) IdObject { return &Node{Id: id} }}
 	KindDevice   = &Kind{Name: "device", Stateful: false, SampleObject: Device{}, NewObject: func(id string) IdObject { return &Device{Id: id, Props: make(map[string]string, 0)} }}
-	KindProduct  = &Kind{Name: "product", Stateful: false, SampleObject: DeviceProduct{}, NewObject: func(id string) IdObject { return &DeviceProduct{Id: id} }}
-	KindProtocol = &Kind{Name: "protocol", Stateful: false, SampleObject: DeviceProtocol{}, NewObject: func(id string) IdObject { return &DeviceProtocol{Id: id, PropFields: make([]*PropField, 0)} }}
-	KindPipeline = &Kind{Name: "pipeline", Stateful: false, SampleObject: Pipeline{}, NewObject: func(id string) IdObject { return &Pipeline{Id: id, ArgDefs: make([]ArgBind, 0)} }}
-	KindPipeTask = &Kind{Name: "pipetask", Stateful: true, SampleObject: PipeTask{}, NewObject: func(id string) IdObject { return &PipeTask{Id: id, Args: make(map[string]string, 0)} }}
+	KindPipeline = &Kind{Name: "pipeline", Stateful: false, SampleObject: Pipeline{}, NewObject: func(id string) IdObject { return &Pipeline{Id: id, Binds: make([]*PipeBind, 0)} }}
+	KindPipeTask = &Kind{Name: "pipetask", Stateful: true, SampleObject: PipeTask{}, NewObject: func(id string) IdObject { return &PipeTask{Id: id, Binds: make([]*PipeBind, 0)} }}
 	KindApplet   = &Kind{Name: "applet", Stateful: true, SampleObject: Applet{}, NewObject: func(id string) IdObject { return &Applet{Id: id} }}
 	KindFunclet  = &Kind{Name: "funclet", Stateful: true, SampleObject: Funclet{}, NewObject: func(id string) IdObject { return &Funclet{Id: id} }}
-	KindServlet  = &Kind{Name: "servlet", Stateful: true, SampleObject: Servlet{}, NewObject: func(id string) IdObject {
-		return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}
-	}}
-	KindState = &Kind{Name: "state", Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return &State{"id": id} }}
+	KindServlet  = &Kind{Name: "servlet", Stateful: true, SampleObject: Servlet{}, NewObject: func(id string) IdObject { return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}	}}
+	KindState    = &Kind{Name: "state", Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return &State{"id": id} }}
+	KindProduct  = &Kind{Name: "product", Stateful: false, SampleObject: DeviceProduct{}, NewObject: func(id string) IdObject { return &DeviceProduct{Id: id} }}
+	KindProtocol = &Kind{Name: "protocol", Stateful: false, SampleObject: DeviceProtocol{}, NewObject: func(id string) IdObject { return &DeviceProtocol{Id: id, Params: make([]*Param, 0)} }}
+	KindWidget   = &Kind{Name: "widget", Stateful: false, SampleObject: PipeWidget{}, NewObject: func(id string) IdObject { return &PipeWidget{Id: id, Params: make([]*Param, 0)} }}
 )
 
 var AllKinds = []*Kind{
 	KindNode, KindPipeline, KindPipeTask,
 	KindDevice, KindProduct, KindProtocol,
 	KindApplet, KindFunclet, KindServlet,
-	KindState,
+	KindState, KindWidget,
 }
 
 var KindMap = make(map[string]*Kind)

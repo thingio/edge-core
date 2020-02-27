@@ -1,0 +1,6 @@
+{
+  "id": "rtmp_source",
+  "name": "RTMP服务器",
+  "desc": "支持实时消息协议（Real-Time Messaging Protocol，RTMP）的服务器",
+  "protocol_id": "rtmp"
+}
