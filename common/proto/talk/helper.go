@@ -21,11 +21,11 @@ func TMessageChatKey(nodeId string, service service.ServiceId, function service.
 }
 
 // if Method=MethodPUB, then Key=/tdata/{node}/{resource_kind}/{resouce_id}
-func TMessageDataKey(nodeId string, kind resource.Kind, id string) string {
+func TMessageDataKey(nodeId string, kind *resource.Kind, id string) string {
 	if kind == resource.KindAny {
-		return TMessageDataPrefix + fmt.Sprintf("/%s/%s", nodeId, kind)
+		return TMessageDataPrefix + fmt.Sprintf("/%s/%s", nodeId, kind.Name)
 	} else {
-		return TMessageDataPrefix + fmt.Sprintf("/%s/%s/%s", nodeId, kind, id)
+		return TMessageDataPrefix + fmt.Sprintf("/%s/%s/%s", nodeId, kind.Name, id)
 	}
 }
 

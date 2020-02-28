@@ -59,19 +59,19 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build apiserver
-        run: make WORK_DIR=apiserver build
+        run: make WORK_DIR=apiserver build-image
 
       - name: Build bootman
-        run: make WORK_DIR=bootman build
+        run: make WORK_DIR=bootman build-image
 
       - name: Build datahub
-        run: make WORK_DIR=datahub build
+        run: make WORK_DIR=datahub build-image
 
       - name: Build deviceman
-        run: make WORK_DIR=deviceman build
+        run: make WORK_DIR=deviceman build-image
 
       - name: Build funcman
-        run: make WORK_DIR=funcman build
+        run: make WORK_DIR=funcman build-image
 
       - name: Build pipeman
-        run: make WORK_DIR=pipeman build
+        run: make WORK_DIR=pipeman build-image

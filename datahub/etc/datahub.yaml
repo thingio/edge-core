@@ -3,8 +3,8 @@ node_id: "my-node"
 mqtt:
   broker_addr: "127.0.0.1:1883"
   qos: 1
-  connect_timeout_ms: 1000
-  request_timeout_ms: 1000
+  connect_timeout: "1000ms"
+  request_timeout: "1000ms"
 
 log:
   console: true
@@ -14,4 +14,4 @@ log:
 
 db:
   file: "data/resource.db"
-  timeout_ms: 1000
+  timeout_ms: "1000ms"

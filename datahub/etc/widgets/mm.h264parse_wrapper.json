@@ -1,0 +1,11 @@
+{
+  "group": "复用/解复用",
+  "id": "mm.h264parse_wrapper",
+  "genus":  "mm",
+  "name": "h264提取组件",
+  "desc": "从rtp包中提取h264视频",
+  "upstream": ["*"],
+  "downstream": ["*"],
+  "node_type": "h264parse_wrapper",
+  "params": []
+}
