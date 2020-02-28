@@ -13,3 +13,6 @@
 .idea
 */go.sum
 */data
+
+# Locally compiled binaries
+*/build
