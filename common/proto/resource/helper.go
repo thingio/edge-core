@@ -3,6 +3,8 @@ package resource
 import (
 	"encoding/binary"
 	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
 )
 
 func MarshalResource(r *Resource) ([]byte, error) {
@@ -13,7 +15,7 @@ func MarshalResource(r *Resource) ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func UnmarshalResource(kind Kind, data []byte) (*Resource, error) {
+func UnmarshalResource(kind *Kind, data []byte) (*Resource, error) {
 	r := kind.NewResource()
 	err := json.Unmarshal(data, r)
 	if err != nil {
@@ -40,7 +42,7 @@ func MarshalResourceList(rs []*Resource) ([]byte, error) {
 	return result, nil
 }
 
-func UnmarshalResourceList(kind Kind, data []byte) ([]*Resource, error) {
+func UnmarshalResourceList(kind *Kind, data []byte) ([]*Resource, error) {
 	count := int(binary.BigEndian.Uint64(data[:8]))
 	if count == 0 {
 		return nil, nil
@@ -59,3 +61,32 @@ func UnmarshalResourceList(kind Kind, data []byte) ([]*Resource, error) {
 	return rs, nil
 }
 
+func LoadResourceFromFile(k *Kind, filename string) (*Resource, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	r := k.NewResource()
+	if err := json.Unmarshal(data, r.Value); err != nil {
+		return nil, err
+	}
+	r.Id = r.Value.(IdObject).GetId()
+	return r, nil
+}
+
+func LoadResourcesFromDir(k *Kind, dirname string) ([]*Resource, error) {
+	files, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return nil, err
+	}
+	rs := make([]*Resource, 0)
+	for _, f := range files {
+		r, err := LoadResourceFromFile(k, filepath.Join(dirname, f.Name()))
+		if err != nil {
+			return nil, err
+		}
+		rs = append(rs, r)
+	}
+	return rs, nil
+}

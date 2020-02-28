@@ -1,0 +1,52 @@
+{
+  "group": "输出",
+  "bind_type": "string",
+  "id": "output_mq",
+  "genus": "ts",
+  "name": "消息队列",
+  "desc": "消息队列发送数据",
+  "params": [
+    {
+      "id": "type",
+      "name": "消息队列类型",
+      "desc": "消息队列类型",
+      "required": true,
+      "style": "selector",
+      "type": "string",
+      "range": "mqtt,kafka,redis",
+      "default": "mqtt"
+    },
+    {
+      "id": "url",
+      "name": "消息队列地址",
+      "desc": "消息队列地址(为空时使用默认值)",
+      "required": false,
+      "style": "input",
+      "type": "string",
+      "range": "",
+      "default": ""
+    },
+    {
+      "id": "topic",
+      "name": "消息主题",
+      "desc": "消息主题",
+      "required": true,
+      "style": "input",
+      "type": "string",
+      "range": "",
+      "default": ""
+    },
+    {
+      "id": "payload",
+      "name": "消息体",
+      "desc": "消息体",
+      "required": true,
+      "style": "textarea",
+      "type": "string",
+      "range": "",
+      "default": ""
+    }
+  ],
+  "upstream": ["*"],
+  "downstream": []
+}

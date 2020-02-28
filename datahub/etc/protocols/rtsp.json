@@ -1,0 +1,16 @@
+{
+  "id": "rtsp",
+  "name": "RTSP协议",
+  "desc": "实时串流协议（Real Time Streaming Protocol，RTSP2）",
+  "genus": "mm",
+  "params": [
+    {
+      "id": "location",
+      "name": "视频流地址",
+      "type": "string",
+      "style": "input",
+      "required": true
+    }
+
+  ]
+}

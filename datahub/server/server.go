@@ -15,7 +15,7 @@ import (
 
 type DatahubServer struct {
 	*talk.TClient
-	rdb storage.ResourceStorage
+	rdb    storage.ResourceStorage
 	nodeId string
 }
 
@@ -28,31 +28,86 @@ func NewDatahubServer(config conf.DatahubConfig) *DatahubServer {
 	return s
 }
 
+var (
+	ResourceDirs = map[*resource.Kind]string{
+		resource.KindProduct:  	"etc/products/",
+		resource.KindProtocol: 	"etc/protocols/",
+		resource.KindWidget: 	"etc/widgets/",
+	}
+)
+
+func (t *DatahubServer) Init() error {
+	// load products and protocols resource into rdb on init
+	for kind, path := range ResourceDirs {
+		log.Infof("loading '%s' resources from '%s'", kind, path)
+		rs, err := resource.LoadResourcesFromDir(kind, path)
+		if err != nil {
+			return err
+		}
+		log.Infof("%d '%s' resources loaded from '%s'", len(rs), kind, path)
+		for _, r := range rs {
+			r.NodeId = t.nodeId
+			if err = t.rdb.Put(r); err != nil {
+				return err
+			}
+		}
+		log.Infof("%d '%s' resources saved into '%s'", len(rs), kind, path)
+	}
+
+	// load node resource into rdb on init and periodically update node state resource
+	r := resource.KindNode.NewResourceOf(NodeData(t.nodeId))
+	r.NodeId = t.nodeId
+	if err := t.rdb.Put(r); err != nil {
+		return err
+	}
+
+	go func(t *DatahubServer) {
+		ticker := time.NewTicker(10 * time.Second)
+		for {
+			<- ticker.C
+			r := resource.KindState.NewResourceOf(NodeState(t.nodeId))
+			r.NodeId = t.nodeId
+			if err := t.rdb.Put(r); err != nil {
+				log.WithError(err).Warnf("fail to save node state to rdb")
+			}
+		}
+	}(t)
+
+	return nil
+}
+
+
 func (t *DatahubServer) Start() error {
 	if err := t.rdb.Init(); err != nil {
 		return err
 	}
 
+	if err := t.Init(); err != nil {
+		return err
+	}
 	if err := t.Connect(); err != nil {
 		return err
 	}
 
-	// LOOP: keep handling incoming resource events
+	return t.Serve()
+}
+
+// LOOP: keep handling incoming resource events
+func (t *DatahubServer) Serve() error {
+
 	tchanKey := talkpb.TMessageDataKey(conf.Config.NodeId, resource.KindAny, "")
 	if ch, err := t.Watch(tchanKey); err != nil {
 		return err
 	} else {
 		for tmsg := range ch {
-			kind := resource.Kind(tmsg.ResourceKind())
+			kind := resource.KindOf(tmsg.ResourceKind())
 			if err := t.Save(kind, tmsg.Payload); err != nil {
 				log.Infof("fail to save %s resource: %s", kind, tmsg.Payload)
 			}
 		}
 	}
-
 	return nil
 }
-
 
 func (t *DatahubServer) Handle(function string, payload []byte) ([]byte, error) {
 
@@ -83,8 +138,7 @@ func (t *DatahubServer) Handle(function string, payload []byte) ([]byte, error) 
 
 }
 
-
-func (t *DatahubServer) Save(kind resource.Kind, data []byte) error {
+func (t *DatahubServer) Save(kind *resource.Kind, data []byte) error {
 	log.Infof("receive '%s' resource event: %s", kind, data)
 	r, err := resource.UnmarshalResource(kind, data)
 	if err != nil {
@@ -95,14 +149,6 @@ func (t *DatahubServer) Save(kind resource.Kind, data []byte) error {
 
 func (t *DatahubServer) GetResource(key resource.Key) (*resource.Resource, error) {
 	log.Infof("receive get call: %+v", key)
-	if key.Kind == resource.KindNode {
-		return &resource.Resource {
-			Key:     key,
-			Value:   NodeData(conf.Config.NodeId),
-			Ts:      time.Now().UnixNano(),
-			Version: 1,
-		}, nil
-	}
 	return t.rdb.Get(key)
 }
 

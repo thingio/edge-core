@@ -1,0 +1,31 @@
+{
+  "group": "输入",
+  "bind_type": "device",
+  "id": "rtspsrc",
+  "genus": "mm",
+  "name": "RTSP源服务器",
+  "desc": "通过RTSP网络接收数据",
+  "upstream": [],
+  "downstream": ["*"],
+  "params": [
+    {
+      "id": "device_product",
+      "name": "多媒体设备产品",
+      "desc": "选择需要绑定的多媒体设备产品",
+      "required": true,
+      "type": "string",
+      "range": "name,id@/api/v1/data/products?genus=mm",
+      "style": "selector_dynamic"
+    },
+    {
+      "id": "protocols",
+      "name": "rtsp传输协议",
+      "desc": "选择rtsp传输协议",
+      "required": true,
+      "style": "selector",
+      "type": "GstRTSPLowerTrans",
+      "range": "unknown,udp,udp_mcast,tcp,http,tls",
+      "default": "udp"
+    }
+  ]
+}

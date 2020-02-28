@@ -1,0 +1,15 @@
+{
+  "id": "rtmp",
+  "name": "RTMP",
+  "desc": "实时消息协议（Real-Time Messaging Protocol，RTMP）",
+  "genus": "mm",
+  "params": [
+    {
+      "id": "location",
+      "name": "视频流地址",
+      "type": "string",
+      "style": "input",
+      "required": true
+    }
+  ]
+}

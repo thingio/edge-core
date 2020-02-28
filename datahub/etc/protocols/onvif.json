@@ -1,0 +1,53 @@
+{
+  "id": "onvif",
+  "name": "ONVIF协议",
+  "desc": "Open Network Video Interface Forum(开放型网络视频接口论坛)",
+  "genus": "mm",
+  "params": [
+    {
+      "id": "ip",
+      "desc": "IP地址",
+      "name": "IP地址",
+      "type": "string",
+      "style": "input",
+      "default": "127.0.0.1",
+      "required": true
+    },
+    {
+      "id": "port",
+      "desc": "设备所在端口号",
+      "name": "端口",
+      "type": "int",
+      "style": "input",
+      "default": "80",
+      "range": "0-65535",
+      "required": true
+    },
+    {
+      "id": "username",
+      "desc": "用户名",
+      "name": "用户名",
+      "type": "string",
+      "style": "input",
+      "default": "admin",
+      "required": true
+    },
+    {
+      "id": "password",
+      "name": "密码",
+      "type": "string",
+      "style": "password",
+      "default": "admin",
+      "required": true
+    },
+    {
+      "id": "code_stream",
+      "name": "码流",
+      "type": "string",
+      "style": "selector",
+      "default": "main",
+      "range": "main@@主码流,sub@@子码流",
+      "required": true
+    }
+  ]
+}

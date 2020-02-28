@@ -1,0 +1,6 @@
+{
+  "id": "rtsp_source",
+  "name": "RTSP服务器",
+  "desc": "支持实时串流协议（Real Time Streaming Protocol，RTSP）的服务器",
+  "protocol_id": "rtsp"
+}

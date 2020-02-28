@@ -1,13 +1,13 @@
 node_id: "my-node"
 
 server:
-  addr: ":10080"
+  addr: ":18080"
 
 mqtt:
   broker_addr: "127.0.0.1:1883"
   qos: 1
-  connect_timeout_ms: 1000
-  request_timeout_ms: 1000
+  connect_timeout: "1000ms"
+  request_timeout: "1000ms"
 
 log:
   console: true

@@ -69,7 +69,7 @@ func (s *BoltStorage) Get(key resource.Key) (result *resource.Resource, err erro
 			return errors.NotFoundf("value %s of key %v", s.bucketName, key.String())
 		}
 
-		r, err := resource.UnmarshalResource(key.Kind, v)
+		r, err := resource.UnmarshalResource(resource.KindOf(key.Kind), v)
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (s *BoltStorage) List(key resource.Key) (result []*resource.Resource, err e
 		prefix := []byte(key.String())
 		for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
 
-			r, err := resource.UnmarshalResource(key.Kind, v)
+			r, err := resource.UnmarshalResource(resource.KindOf(key.Kind), v)
 			if err != nil {
 				return err
 			}

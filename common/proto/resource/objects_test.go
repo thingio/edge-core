@@ -10,7 +10,7 @@ import (
 func TestMarshal(t *testing.T) {
 	p := Pipeline{
 		Id:      "test-123",
-		Type:    "ts",
+		Genus:   "ts",
 		Name:    "just a test",
 		BodyDef: "just a body",
 	}
@@ -109,3 +109,26 @@ func TestUnmarshalDeviceList(t *testing.T) {
 	}
 	fmt.Printf("%+v\n", value)
 }
+
+func TestMarshalResourceState(t *testing.T) {
+	obj := KindState.NewResource()
+	obj.Value.(State)["data"] = "data"
+	data, _ := MarshalResource(obj)
+	fmt.Printf("%s\n", data)
+
+	obj2, _ := UnmarshalResource(KindState, data)
+	fmt.Printf("%+v\n%+v\n", obj, obj2)
+
+
+}
+
+func TestUnmarshalResourceState(t *testing.T) {
+	obj := KindState.NewResource()
+	err := json.Unmarshal([]byte(`{ "any": "any" }`), &obj.Value)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Printf("%+v\n", obj)
+}
+
