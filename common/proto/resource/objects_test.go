@@ -9,10 +9,10 @@ import (
 
 func TestMarshal(t *testing.T) {
 	p := Pipeline{
-		Id:      "test-123",
-		Genus:   "ts",
-		Name:    "just a test",
-		BodyDef: "just a body",
+		Id:    "test-123",
+		Genus: "ts",
+		Name:  "just a test",
+		Body:  nil,
 	}
 	data, err := json.Marshal(p)
 	if err != nil {
@@ -20,7 +20,7 @@ func TestMarshal(t *testing.T) {
 		return
 	}
 
-	expect := `{"id":"test-123","type":"ts","name":"just a test","body_def":"just a body"}`
+	expect := `{"id":"test-123","genus":"ts","name":"just a test"}`
 	if expect != string(data) {
 		t.Fail()
 	}
@@ -119,7 +119,6 @@ func TestMarshalResourceState(t *testing.T) {
 	obj2, _ := UnmarshalResource(KindState, data)
 	fmt.Printf("%+v\n%+v\n", obj, obj2)
 
-
 }
 
 func TestUnmarshalResourceState(t *testing.T) {
@@ -131,4 +130,3 @@ func TestUnmarshalResourceState(t *testing.T) {
 	}
 	fmt.Printf("%+v\n", obj)
 }
-

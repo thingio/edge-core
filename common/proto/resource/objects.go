@@ -73,16 +73,16 @@ func (t Pipeline) GetId() string   { return t.Id }
 func (t Pipeline) SetId(id string) { t.Id = id }
 
 type PipeBind struct {
-	Id    string            `json:"id,omitempty"`    // bind id: if Pipeline.Mode=graph then id=PipeNode.Id
-	Name  string            `json:"name,omitempty"`  // bind name
-	Type  string            `json:"type,omitempty"`  // bind type： [device|applet|funclet|roi|input|selector|dynamic_selector]
-	Infos map[string]string `json:"infos,omitempty"` // bind info: {product:xxx} when Type=device; {type:xxx} when Type=applet;
-	Value string            `json:"value,omitempty"` // bind value: works as a final value in PipeTask, and default value in Pipeline.Binds
-	// TIPS for web-dev:
-	// case Type=device then GET /data/devices?product=xxx for user to select
-	// case Type=applet then GET /data/applets?type=xxx to for user to select
-	// case Type=funclet then GET /data/funclets for user to select
-	// case Type=string then user can input anything
+	Id           string `json:"id,omitempty"` // bind id: if Pipeline.Mode=graph then id={PipeNode.Id}.{Param.Id}
+	NodeId       string `json:"node_id,omitempty"`
+	ParamId      string `json:"param_id,omitempty"`
+	NodeName     string `json:"node_name,omitempty"`
+	ParamName    string `json:"param_name,omitempty"`
+	Value        string `json:"value,omitempty"`         // bind value: final value in PipeTask
+	DefaultValue string `json:"default_value,omitempty"` // bind default value: default value in Pipeline.Binds
+
+	Style ParamStyle `json:"type,omitempty"`  // style of this bind: [roi|input|selector|dynamic_selector]
+	Range ParamRange `json:"range,omitempty"` // value range of this bind
 }
 
 type PipeGraph struct {
@@ -112,7 +112,6 @@ type PipeNode struct {
 	NodeId    string            `json:"node_id,omitempty"` // user generated uuid
 	NodeName  string            `json:"node_name,omitempty"`
 	WidgetId  string            `json:"widget_id,omitempty"`
-	BindType  string            `json:"bind_type,omitempty"` // PipeWidget.BindType -> PipeNode.BindType -> Pipeline.Binds[i].Type
 	NodeProps map[string]string `json:"node_props,omitempty"`
 	NodeUi    interface{}       `json:"node_ui,omitempty"` // any UI data, such as x,y position in a 2D plate
 }
@@ -129,7 +128,6 @@ type PipeTask struct {
 	Id         string               `json:"id,omitempty"`          // task id
 	PipelineId string               `json:"pipeline_id,omitempty"` // related pipeline id
 	Genus      string               `json:"genus,omitempty"`       // related pipeline type: mm or ts
-	Mode       string               `json:"mode,omitempty"`        // related pipeline form: graph or script
 	Enable     bool                 `json:"enable,omitempty"`
 	Name       string               `json:"name,omitempty"`
 	Binds      map[string]*PipeBind `json:"binds,omitempty"`
@@ -171,15 +169,39 @@ type DeviceProtocol struct {
 func (t DeviceProtocol) GetId() string   { return t.Id }
 func (t DeviceProtocol) SetId(id string) { t.Id = id }
 
+type ParamScope = string
+
+type ParamStyle = string
+
+// ParamRange specifies the range of values of different ParamStyle:
+// case Style=input: user can input anything
+// case Style=selector: user can select an item like "true" in bind range "true@@是,false@@否"
+// case Style=dynamic_selector: user can select an item from response of api specified by bind range like "id,name@/api/v1/res/funclets"
+type ParamRange = string
+
+const (
+	All      ParamScope = "*"
+	PipeOnly ParamScope = "pipe"
+	TaskOnly ParamScope = "task"
+
+	ROI             ParamStyle = "roi"
+	Input           ParamStyle = "input"
+	Textarea        ParamStyle = "textarea"
+	Selector        ParamStyle = "selector"
+	DynamicSelector ParamStyle = "dynamic_selector"
+)
+
 type Param struct {
-	Id       string `json:"id,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Desc     string `json:"desc,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Style    string `json:"style,omitempty"`
-	Default  string `json:"default,omitempty"`
-	Range    string `json:"range,omitempty"` // eg. "true@@自动模式,false@@手动模式"
-	Required bool   `json:"required,omitempty"`
+	Id       string     `json:"id,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	Desc     string     `json:"desc,omitempty"`
+	Type     string     `json:"type,omitempty"`
+	Default  string     `json:"default,omitempty"`
+	Required bool       `json:"required,omitempty"`
+	Depends  []string   `json:"depends,omitempty"` // param ids that this parameter depends on
+	Scope    ParamScope `json:"scope,omitempty"`
+	Style    ParamStyle `json:"style,omitempty"`
+	Range    ParamRange `json:"range,omitempty"`
 }
 
 type Alert struct {
