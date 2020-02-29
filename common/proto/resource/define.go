@@ -26,8 +26,8 @@ var (
 	KindAny      = &Kind{Name: "#", Stateful: false, SampleObject: nil, NewObject: func(id string) IdObject { return nil }}
 	KindNode     = &Kind{Name: "node", Stateful: true, SampleObject: Node{}, NewObject: func(id string) IdObject { return &Node{Id: id} }}
 	KindDevice   = &Kind{Name: "device", Stateful: false, SampleObject: Device{}, NewObject: func(id string) IdObject { return &Device{Id: id, Props: make(map[string]string, 0)} }}
-	KindPipeline = &Kind{Name: "pipeline", Stateful: false, SampleObject: Pipeline{}, NewObject: func(id string) IdObject { return &Pipeline{Id: id, Binds: make([]*PipeBind, 0)} }}
-	KindPipeTask = &Kind{Name: "pipetask", Stateful: true, SampleObject: PipeTask{}, NewObject: func(id string) IdObject { return &PipeTask{Id: id, Binds: make([]*PipeBind, 0)} }}
+	KindPipeline = &Kind{Name: "pipeline", Stateful: false, SampleObject: Pipeline{}, NewObject: func(id string) IdObject { return &Pipeline{Id: id, Body: &PipeGraph{}, Binds: make(map[string]*PipeBind, 0)} }}
+	KindPipeTask = &Kind{Name: "pipetask", Stateful: true, SampleObject: PipeTask{}, NewObject: func(id string) IdObject { return &PipeTask{Id: id, Binds: make(map[string]*PipeBind, 0)} }}
 	KindApplet   = &Kind{Name: "applet", Stateful: true, SampleObject: Applet{}, NewObject: func(id string) IdObject { return &Applet{Id: id} }}
 	KindFunclet  = &Kind{Name: "funclet", Stateful: true, SampleObject: Funclet{}, NewObject: func(id string) IdObject { return &Funclet{Id: id} }}
 	KindServlet  = &Kind{Name: "servlet", Stateful: true, SampleObject: Servlet{}, NewObject: func(id string) IdObject { return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}	}}

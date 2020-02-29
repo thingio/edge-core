@@ -47,21 +47,26 @@ func (t Funclet) SetId(id string) { t.Id = id }
 type Applet struct {
 	Id    string `json:"id,omitempty"`
 	Name  string `json:"name,omitempty"`
-	Type  string `json:"type,omitempty"`
-	Arch  string `json:"arch,omitempty"`
-	Image string `json:"image,omitempty"`
+	Mode  string `json:"mode,omitempty"` // unmanaged (remote service) or managed (started by bootman)
+	Url   string `json:"url,omitempty"`  // http://host:port for unmanaged applets
+	Specs struct {
+		Path   string `json:"path,omitempty"`
+		Method string `json:"method,omitempty"`
+		Req    string `json:"req,omitempty"`
+	} `json:"specs,omitempty"`
+	Configs interface{} `json:"configs,omitempty"` // for managed applets, user will provide configs for bootman
 }
 
 func (t Applet) GetId() string   { return t.Id }
 func (t Applet) SetId(id string) { t.Id = id }
 
 type Pipeline struct {
-	Id    string      `json:"id,omitempty"`
-	Genus string      `json:"genus,omitempty"` // mm or ts
-	Name  string      `json:"name,omitempty"`
-	Mode  string      `json:"mode,omitempty"` // graph or script
-	Body  interface{} `json:"body,omitempty"` // pipegraph or string
-	Binds []*PipeBind `json:"binds,omitempty"`
+	Id    string               `json:"id,omitempty"`
+	Genus string               `json:"genus,omitempty"` // mm or ts
+	Name  string               `json:"name,omitempty"`
+	Mode  string               `json:"mode,omitempty"` // graph or script
+	Body  *PipeGraph           `json:"body,omitempty"` // TODO: pipegraph or string
+	Binds map[string]*PipeBind `json:"binds,omitempty"`
 }
 
 func (t Pipeline) GetId() string   { return t.Id }
@@ -70,7 +75,7 @@ func (t Pipeline) SetId(id string) { t.Id = id }
 type PipeBind struct {
 	Id    string            `json:"id,omitempty"`    // bind id: if Pipeline.Mode=graph then id=PipeNode.Id
 	Name  string            `json:"name,omitempty"`  // bind name
-	Type  string            `json:"type,omitempty"`  // bind type： [device|applet|funclet|string]
+	Type  string            `json:"type,omitempty"`  // bind type： [device|applet|funclet|roi|input|selector|dynamic_selector]
 	Infos map[string]string `json:"infos,omitempty"` // bind info: {product:xxx} when Type=device; {type:xxx} when Type=applet;
 	Value string            `json:"value,omitempty"` // bind value: works as a final value in PipeTask, and default value in Pipeline.Binds
 	// TIPS for web-dev:
@@ -83,7 +88,7 @@ type PipeBind struct {
 type PipeGraph struct {
 	Nodes []*PipeNode `json:"nodes,omitempty"`
 	Links []*PipeLink `json:"links,omitempty"`
-	Ui    string      `json:"ui,omitempty"`
+	Ui    interface{} `json:"ui,omitempty"` // any UI data, won't be used by backend
 }
 
 // PipeWidget is the template for PipeNode in PipeGraph
@@ -109,26 +114,25 @@ type PipeNode struct {
 	WidgetId  string            `json:"widget_id,omitempty"`
 	BindType  string            `json:"bind_type,omitempty"` // PipeWidget.BindType -> PipeNode.BindType -> Pipeline.Binds[i].Type
 	NodeProps map[string]string `json:"node_props,omitempty"`
-	NodeUi    string            `json:"node_ui,omitempty"` // such as x,y position in a 2-D graph
+	NodeUi    interface{}       `json:"node_ui,omitempty"` // any UI data, such as x,y position in a 2D plate
 }
 
 // PipeLink represents link between 2 PipeNodes
 type PipeLink struct {
-	LinkId     string `json:"link_id,omitempty"` // user generated uuid
-	FromNodeId string `json:"from_node_id,omitempty"`
-	ToNodeId   string `json:"to_node_id,omitempty"`
-	CreateTime int64  `json:"create_time,omitempty"`
-	LinkUi     string `json:"link_ui,omitempty"`
+	LinkId     string      `json:"link_id,omitempty"` // user generated uuid
+	FromNodeId string      `json:"from_node_id,omitempty"`
+	ToNodeId   string      `json:"to_node_id,omitempty"`
+	LinkUi     interface{} `json:"link_ui,omitempty"` // any UI data, won't be used by backend
 }
 
 type PipeTask struct {
-	Id         string      `json:"id,omitempty"`          // task id
-	PipelineId string      `json:"pipeline_id,omitempty"` // related pipeline id
-	Genus      string      `json:"genus,omitempty"`       // related pipeline type: mm or ts
-	Form       string      `json:"form,omitempty"`        // related pipeline form: graph or script
-	Name       string      `json:"name,omitempty"`
-	Body       interface{} `json:"body,omitempty"`
-	Binds      []*PipeBind `json:"binds,omitempty"`
+	Id         string               `json:"id,omitempty"`          // task id
+	PipelineId string               `json:"pipeline_id,omitempty"` // related pipeline id
+	Genus      string               `json:"genus,omitempty"`       // related pipeline type: mm or ts
+	Mode       string               `json:"mode,omitempty"`        // related pipeline form: graph or script
+	Enable     bool                 `json:"enable,omitempty"`
+	Name       string               `json:"name,omitempty"`
+	Binds      map[string]*PipeBind `json:"binds,omitempty"`
 }
 
 func (t PipeTask) GetId() string   { return t.Id }
@@ -179,13 +183,12 @@ type Param struct {
 }
 
 type Alert struct {
-	Id      string `json:"id,omitempty"`
-	Topic   string `json:"topic,omitempty"`
-	Level   string `json:"level,omitempty"`
-	Message string `json:"message,omitempty"`
-	Data    string `json:"data,omitempty"`
-	Image   string `json:"image,omitempty"` // better be []byte, but after json serialization, they will be base64 anyway
+	Id         string `json:"id,omitempty"`
+	PipeTaskId string `json:"pipetask_id,omitempty"`
+	Topic      string `json:"topic,omitempty"`
+	Message    string `json:"message,omitempty"`
+	Level      string `json:"level,omitempty"`
+	Data       string `json:"data,omitempty"`  // better be []byte, but after json serialization, they will be base64 anyway
+	Image      string `json:"image,omitempty"` // same as above
+	Ts         string `json:"ts,omitempty"`
 }
-
-func (t Alert) GetId() string   { return t.Id }
-func (t Alert) SetId(id string) { t.Id = id }
