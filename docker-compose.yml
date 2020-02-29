@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+  apiserver:
+    image: xiao4er/thingio:apiserver-latest
+    container_name: thingio-apiserver
+    network_mode: host
+    depends_on:
+      - datahub
+    restart: always
+
+  datahub:
+    image: xiao4er/thingio:datahub-latest
+    container_name: thingio-datahub
+    network_mode: host
+    depends_on:
+      - mosquitto
+    restart: always
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: thingio-mosquitto
+    network_mode: host
+    restart: always
+
+

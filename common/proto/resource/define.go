@@ -31,7 +31,7 @@ var (
 	KindApplet   = &Kind{Name: "applet", Stateful: true, SampleObject: Applet{}, NewObject: func(id string) IdObject { return &Applet{Id: id} }}
 	KindFunclet  = &Kind{Name: "funclet", Stateful: true, SampleObject: Funclet{}, NewObject: func(id string) IdObject { return &Funclet{Id: id} }}
 	KindServlet  = &Kind{Name: "servlet", Stateful: true, SampleObject: Servlet{}, NewObject: func(id string) IdObject { return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}	}}
-	KindState    = &Kind{Name: "state", Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return &State{"id": id} }}
+	KindState    = &Kind{Name: "state", Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return State{"id": id} }}
 	KindProduct  = &Kind{Name: "product", Stateful: false, SampleObject: DeviceProduct{}, NewObject: func(id string) IdObject { return &DeviceProduct{Id: id} }}
 	KindProtocol = &Kind{Name: "protocol", Stateful: false, SampleObject: DeviceProtocol{}, NewObject: func(id string) IdObject { return &DeviceProtocol{Id: id, Params: make([]*Param, 0)} }}
 	KindWidget   = &Kind{Name: "widget", Stateful: false, SampleObject: PipeWidget{}, NewObject: func(id string) IdObject { return &PipeWidget{Id: id, Params: make([]*Param, 0)} }}
