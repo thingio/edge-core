@@ -1,0 +1,13 @@
+{
+  "group": "智能工具",
+  "bind_type": "roi",
+  "id": "smartroi",
+  "genus": "mm",
+  "name": "区域检测",
+  "desc": "区域检测",
+  "language" : "ch",
+  "pipeline_type":  "media",
+  "upstream": ["*"],
+  "downstream": ["*"],
+  "params": []
+}

@@ -40,14 +40,14 @@
       "default": "admin",
       "required": true
     },
-    {
-      "id": "code_stream",
-      "name": "码流",
-      "type": "string",
-      "style": "selector",
-      "default": "main",
-      "range": "main@@主码流,sub@@子码流",
-      "required": true
-    }
+{
+  "id": "code_stream",
+  "name": "码流",
+  "type": "string",
+  "style": "selector",
+  "default": "main",
+  "range": "main@@主码流,sub@@子码流",
+  "required": true
+}
   ]
 }

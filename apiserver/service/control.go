@@ -17,15 +17,17 @@ func AddPipeTaskWebService(cli api.DatahubApi, ws *restful.WebService) *restful.
 	apiTags := []string{resource.KindPipeTask.Name}
 
 	ws.Route(ws.POST(fmt.Sprintf("/%s/{id}/start",resource.KindPipeTask.Name)).To(api.StartTask).
-		Doc("get pipeline").Metadata(restfulspec.KeyOpenAPITags, apiTags).
-		Writes(resource.Pipeline{}).
-		Returns(200, "OK", resource.Pipeline{}).
+		Doc("start pipestart").Metadata(restfulspec.KeyOpenAPITags, apiTags).
+		Param(ws.PathParameter("id","pipetask id").DataType("string")).
+		Writes(resource.PipeTask{}).
+		Returns(200, "OK", resource.PipeTask{}).
 		Returns(404, "Not Found", nil))
 
 	ws.Route(ws.POST(fmt.Sprintf("/%s/{id}/stop",resource.KindPipeTask.Name)).To(api.StopTask).
-		Doc("get pipeline").Metadata(restfulspec.KeyOpenAPITags, apiTags).
-		Writes(resource.Pipeline{}).
-		Returns(200, "OK", resource.Pipeline{}).
+		Doc("stop pipeline").Metadata(restfulspec.KeyOpenAPITags, apiTags).
+		Param(ws.PathParameter("id","pipetask id").DataType("string")).
+		Writes(resource.PipeTask{}).
+		Returns(200, "OK", resource.PipeTask{}).
 		Returns(404, "Not Found", nil))
 
 	return ws
