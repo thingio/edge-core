@@ -2,16 +2,20 @@ version: "3.7"
 
 services:
   apiserver:
-    image: xiao4er/thingio:apiserver-latest
+    image: thingio/edge-core:latest
     container_name: thingio-apiserver
+    command: "./apiserver"
     network_mode: host
     depends_on:
       - datahub
     restart: always
 
   datahub:
-    image: xiao4er/thingio:datahub-latest
+    image: thingio/edge-core:latest
     container_name: thingio-datahub
+    command: "./datahub"
+    volumes:
+      - ./data:/thingio/data
     network_mode: host
     depends_on:
       - mosquitto

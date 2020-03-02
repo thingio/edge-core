@@ -16,3 +16,5 @@
 
 # Locally compiled binaries
 */build
+*/Makefile
+build
