@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/juju/errors"
 	"github.com/thingio/edge-core/common/conf"
 	"github.com/thingio/edge-core/common/proto/resource"
 	talkpb "github.com/thingio/edge-core/common/proto/talk"
@@ -41,7 +41,8 @@ func (dc *DatahubClient) GetResource(kind *resource.Kind, id string) (*resource.
 	}
 
 	if rsp.Method == talkpb.MethodERR {
-		return nil, errors.New(string(rsp.Payload))
+		message := string(rsp.Payload)
+		return nil, errors.New(message)
 	} else if rsp.Method == talkpb.MethodRSP {
 		r, err := resource.UnmarshalResource(kind, rsp.Payload)
 		if err != nil {

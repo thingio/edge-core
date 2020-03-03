@@ -46,7 +46,7 @@
   "type": "string",
   "style": "selector",
   "default": "main",
-  "range": "main@@主码流,sub@@子码流",
+  "range": "main:主码流,sub:子码流",
   "required": true
 }
   ]

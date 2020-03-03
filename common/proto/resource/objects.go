@@ -44,36 +44,64 @@ type Funclet struct {
 func (t Funclet) GetId() string   { return t.Id }
 func (t Funclet) SetId(id string) { t.Id = id }
 
+type AppSpec struct {
+	Path   string `json:"path,omitempty"`
+	Method string `json:"method,omitempty"`
+	Req    string `json:"req,omitempty"`
+}
+
+type AppMode string
+
+const (
+	Manned    AppMode = "managed"   // remote service
+	Unmanaged AppMode = "unmanaged" // started by bootman
+)
+
 type Applet struct {
-	Id    string `json:"id,omitempty"`
-	Name  string `json:"name,omitempty"`
-	Mode  string `json:"mode,omitempty"` // unmanaged (remote service) or managed (started by bootman)
-	Url   string `json:"url,omitempty"`  // http://host:port for unmanaged applets
-	Specs struct {
-		Path   string `json:"path,omitempty"`
-		Method string `json:"method,omitempty"`
-		Req    string `json:"req,omitempty"`
-	} `json:"specs,omitempty"`
+	Id      string      `json:"id,omitempty"`
+	Name    string      `json:"name,omitempty"`
+	Mode    AppMode     `json:"mode,omitempty"`
+	Url     string      `json:"url,omitempty"` // http://host:port for unmanaged applets
+	Specs   AppSpec     `json:"specs,omitempty"`
 	Configs interface{} `json:"configs,omitempty"` // for managed applets, user will provide configs for bootman
 }
 
 func (t Applet) GetId() string   { return t.Id }
 func (t Applet) SetId(id string) { t.Id = id }
 
+type PipeMode string
+
+const (
+	Graph  PipeMode = "graph"
+	Script PipeMode = "script"
+)
+
 type Pipeline struct {
 	Id    string               `json:"id,omitempty"`
 	Genus string               `json:"genus,omitempty"` // mm or ts
 	Name  string               `json:"name,omitempty"`
-	Mode  string               `json:"mode,omitempty"` // graph or script
-	Body  *PipeGraph           `json:"body,omitempty"` // TODO: pipegraph or string
+	Mode  PipeMode             `json:"mode,omitempty"` // graph or script
+	Body  *PipeGraph           `json:"body,omitempty"` // TODO: change to interface{} to support other modes, such as script
 	Binds map[string]*PipeBind `json:"binds,omitempty"`
 }
 
 func (t Pipeline) GetId() string   { return t.Id }
 func (t Pipeline) SetId(id string) { t.Id = id }
 
+type PipeTask struct {
+	Id         string               `json:"id,omitempty"`          // task id
+	PipelineId string               `json:"pipeline_id,omitempty"` // related pipeline id
+	Genus      string               `json:"genus,omitempty"`       // related pipeline type: mm or ts
+	Enable     bool                 `json:"enable,omitempty"`
+	Name       string               `json:"name,omitempty"`
+	Binds      map[string]*PipeBind `json:"binds,omitempty"`
+}
+
+func (t PipeTask) GetId() string   { return t.Id }
+func (t PipeTask) SetId(id string) { t.Id = id }
+
 type PipeBind struct {
-	Id           string `json:"id,omitempty"` // bind id: if Pipeline.Mode=graph then id={PipeNode.Id}.{Param.Id}
+	Id           string `json:"id,omitempty"` // bind id: if Pipeline.Mode=graph then id={PipeNode.Id}.{PipeParam.Id}
 	NodeId       string `json:"node_id,omitempty"`
 	ParamId      string `json:"param_id,omitempty"`
 	NodeName     string `json:"node_name,omitempty"`
@@ -93,15 +121,15 @@ type PipeGraph struct {
 
 // PipeWidget is the template for PipeNode in PipeGraph
 type PipeWidget struct {
-	Id         string   `json:"id,omitempty"`
-	Genus      string   `json:"genus,omitempty"`
-	Group      string   `json:"group,omitempty"`
-	Name       string   `json:"name,omitempty"`
-	Desc       string   `json:"desc,omitempty"`
-	BindType   string   `json:"bind_type,omitempty"` // PipeWidget.BindType -> PipeNode.BindType -> Pipeline.Args.Type
-	Params     []*Param `json:"params,omitempty"`    // PipeWidget.Params will be used to generates Pipeline.Nodes[i].Props
-	Upstream   []string `json:"upstream,omitempty"`
-	Downstream []string `json:"downstream,omitempty"`
+	Id         string       `json:"id,omitempty"`
+	Genus      string       `json:"genus,omitempty"`
+	Group      string       `json:"group,omitempty"`
+	Name       string       `json:"name,omitempty"`
+	Desc       string       `json:"desc,omitempty"`
+	BindType   string       `json:"bind_type,omitempty"` // PipeWidget.BindType -> PipeNode.BindType -> Pipeline.Args.Type
+	Params     []*PipeParam `json:"params,omitempty"`    // PipeWidget.Params will be used to generates Pipeline.Nodes[i].Props
+	Upstream   []string     `json:"upstream,omitempty"`
+	Downstream []string     `json:"downstream,omitempty"`
 }
 
 func (t PipeWidget) GetId() string   { return t.Id }
@@ -123,18 +151,6 @@ type PipeLink struct {
 	ToNodeId   string      `json:"to_node_id,omitempty"`
 	LinkUi     interface{} `json:"link_ui,omitempty"` // any UI data, won't be used by backend
 }
-
-type PipeTask struct {
-	Id         string               `json:"id,omitempty"`          // task id
-	PipelineId string               `json:"pipeline_id,omitempty"` // related pipeline id
-	Genus      string               `json:"genus,omitempty"`       // related pipeline type: mm or ts
-	Enable     bool                 `json:"enable,omitempty"`
-	Name       string               `json:"name,omitempty"`
-	Binds      map[string]*PipeBind `json:"binds,omitempty"`
-}
-
-func (t PipeTask) GetId() string   { return t.Id }
-func (t PipeTask) SetId(id string) { t.Id = id }
 
 type Device struct {
 	Id        string            `json:"id,omitempty"`
@@ -159,39 +175,42 @@ func (t DeviceProduct) GetId() string   { return t.Id }
 func (t DeviceProduct) SetId(id string) { t.Id = id }
 
 type DeviceProtocol struct {
-	Id     string   `json:"id,omitempty"`
-	Name   string   `json:"name,omitempty"`
-	Genus  string   `json:"genus,omitempty"`
-	Desc   string   `json:"desc,omitempty"`
-	Params []*Param `json:"params,omitempty"` // DeviceProtocol.Params will be use to generate Device.Props
+	Id     string         `json:"id,omitempty"`
+	Name   string         `json:"name,omitempty"`
+	Genus  string         `json:"genus,omitempty"`
+	Desc   string         `json:"desc,omitempty"`
+	Params []*DeviceParam `json:"params,omitempty"` // DeviceProtocol.Params will be use to generate Device.Props
 }
 
 func (t DeviceProtocol) GetId() string   { return t.Id }
 func (t DeviceProtocol) SetId(id string) { t.Id = id }
 
+
 type ParamScope = string
-
-type ParamStyle = string
-
-// ParamRange specifies the range of values of different ParamStyle:
-// case Style=input: user can input anything
-// case Style=selector: user can select an item like "true" in bind range "true@@是,false@@否"
-// case Style=dynamic_selector: user can select an item from response of api specified by bind range like "id,name@/api/v1/res/funclets"
-type ParamRange = string
 
 const (
 	All      ParamScope = "*"
 	PipeOnly ParamScope = "pipe"
 	TaskOnly ParamScope = "task"
+)
 
-	ROI             ParamStyle = "roi"
+type ParamStyle = string
+
+const (
+	ROI             ParamStyle = "roi" // affected in PipeParam only, DeviceParam won't use this style
 	Input           ParamStyle = "input"
 	Textarea        ParamStyle = "textarea"
 	Selector        ParamStyle = "selector"
 	DynamicSelector ParamStyle = "dynamic_selector"
 )
 
-type Param struct {
+// ParamRange specifies the range of values of different ParamStyle:
+// case Style=input: user can input anything
+// case Style=selector: user can select an item like "true" in bind range "true:是,false:否"
+// case Style=dynamic_selector: user can select an item from response of api specified by bind range like "id:name@/api/v1/res/funclets"
+type ParamRange = string
+
+type PipeParam struct {
 	Id       string     `json:"id,omitempty"`
 	Name     string     `json:"name,omitempty"`
 	Desc     string     `json:"desc,omitempty"`
@@ -204,13 +223,14 @@ type Param struct {
 	Range    ParamRange `json:"range,omitempty"`
 }
 
-type Alert struct {
-	Id         string `json:"id,omitempty"`
-	PipeTaskId string `json:"pipetask_id,omitempty"`
-	Topic      string `json:"topic,omitempty"`
-	Message    string `json:"message,omitempty"`
-	Level      string `json:"level,omitempty"`
-	Data       string `json:"data,omitempty"`  // better be []byte, but after json serialization, they will be base64 anyway
-	Image      string `json:"image,omitempty"` // same as above
-	Ts         string `json:"ts,omitempty"`
+type DeviceParam struct {
+	Id       string     `json:"id,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	Desc     string     `json:"desc,omitempty"`
+	Type     string     `json:"type,omitempty"`
+	Default  string     `json:"default,omitempty"`
+	Required bool       `json:"required,omitempty"`
+	Depends  []string   `json:"depends,omitempty"` // param ids that this parameter depends on
+	Style    ParamStyle `json:"style,omitempty"`
+	Range    ParamRange `json:"range,omitempty"`
 }

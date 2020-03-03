@@ -30,7 +30,10 @@ func main() {
 var API_ROOT = "/api/v1"
 
 func MountAPI(cli api.DatahubApi) {
-	restful.Add(service.NewResourceAPI(API_ROOT+"/data", cli))
+	restful.Add(service.NewResourceAPI(API_ROOT+"/res", cli))
 	restful.Add(service.NewControlAPI(API_ROOT+"/ctl", cli))
+	restful.Add(service.NewDataAPI(API_ROOT+"/data", cli))
+	restful.Add(service.NewLogAPI(API_ROOT+"/log" +
+		"", cli))
 	restful.Add(service.NewEdgeSwaggerAPI("/apidocs"))
 }
