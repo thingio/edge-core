@@ -18,6 +18,10 @@ func AddControlWS(cli api.DatahubApi, ws *restful.WebService) *restful.WebServic
 		AddAction(ws, kind, "POST", "stop", api.Stop)
 	}
 
+	// mm pipetask preview
+	taskApi := &taskControlApi{}
+	AddAction(ws, resource.KindPipeTask, "POST", "preview", taskApi.Preview)
+
 	// mm device control
 	devApi := &deviceControlApi{}
 	AddAction(ws, resource.KindDevice, "GET", "preview", devApi.Preview)
@@ -31,6 +35,14 @@ func AddControlWS(cli api.DatahubApi, ws *restful.WebService) *restful.WebServic
 	return ws
 }
 
+type taskControlApi struct {
+}
+
+func (this *taskControlApi) Preview(request *restful.Request, response *restful.Response) {
+	//TODO
+	WriteResult(response, stderr.NotImplemented.Of("mm pipetask preview api"))
+}
+
 func AddAction(ws *restful.WebService, kind *resource.Kind, httpMethod string, action string, function restful.RouteFunction, queries ...string) *restful.WebService {
 
 	builder := ws.Method(httpMethod).Path(fmt.Sprintf("/%s/{id}/%s", kind.Name, action)).To(function).
@@ -40,7 +52,7 @@ func AddAction(ws *restful.WebService, kind *resource.Kind, httpMethod string, a
 		Writes(resource.ResourceState{State: &resource.State{}})
 
 	for _, q := range queries {
-		builder.Param(ws.QueryParameter(fmt.Sprintf("%s={%s}", q, q), q))
+		builder.Param(ws.QueryParameter(q, q))
 	}
 
 	return ws.Route(builder)

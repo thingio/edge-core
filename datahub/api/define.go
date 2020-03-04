@@ -3,6 +3,7 @@ package api
 import "github.com/thingio/edge-core/common/proto/resource"
 
 type ResourceWatcher func(*resource.Resource)
+type ResourceStateWatcher func(state *resource.ResourceState)
 
 type DatahubApi interface {
 	/* GET api: non-deleted resource by id */
@@ -15,7 +16,7 @@ type DatahubApi interface {
 	QueryResources(kind *resource.Kind, idPrefix string) ([]*resource.Resource, error)
 
 	/* WATCH api: include the ones editor itself made */
-	WatchResource(kind *resource.Kind, watcher ResourceWatcher) error
+	WatchResource(kind *resource.Kind, watcher ResourceWatcher, watchSelf bool) error
 
 	/* UPDATE api: save the entire resource */
 	SaveResource(r *resource.Resource) error

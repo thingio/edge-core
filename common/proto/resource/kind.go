@@ -13,18 +13,25 @@ type Kind struct {
 }
 
 var (
+	// Placeholder
 	KindAny      = &Kind{Name: "#", Cloneable: false, Stateful: false, SampleObject: nil, NewObject: func(id string) IdObject { return nil }}
+	// State stores runtime information of a stateful Resource
+	KindState    = &Kind{Name: "state", Cloneable: false, Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return State{"id": id} }}
+	// Node stores system information of the host, each node has exactly one Resource, and one State
 	KindNode     = &Kind{Name: "node", Cloneable: false, Stateful: true, SampleObject: Node{}, NewObject: func(id string) IdObject { return &Node{Id: id} }}
+	// Device stores device metadata, the realtime data will be stored in tsdb (for ts genus) or file (for mm genus)
 	KindDevice   = &Kind{Name: "device", Cloneable: true, Stateful: false, SampleObject: Device{}, NewObject: func(id string) IdObject { return &Device{Id: id, Props: make(map[string]string, 0)} }}
+	KindProduct  = &Kind{Name: "product", Cloneable: false, Stateful: false, SampleObject: DeviceProduct{}, NewObject: func(id string) IdObject { return &DeviceProduct{Id: id} }}
+	KindProtocol = &Kind{Name: "protocol", Cloneable: false, Stateful: false, SampleObject: DeviceProtocol{}, NewObject: func(id string) IdObject { return &DeviceProtocol{Id: id, Params: make([]*DeviceParam, 0)} }}
+	// Pipeline is a stream template, Pipetask is a stream runnable based on Pipeline but bind several parameters, such as devices/funclets/applets
 	KindPipeline = &Kind{Name: "pipeline", Cloneable: true, Stateful: false, SampleObject: Pipeline{}, NewObject: func(id string) IdObject { return &Pipeline{Id: id, Body: &PipeGraph{}, Binds: make(map[string]*PipeBind, 0)} }}
 	KindPipeTask = &Kind{Name: "pipetask", Cloneable: true, Stateful: true, SampleObject: PipeTask{}, NewObject: func(id string) IdObject { return &PipeTask{Id: id, Binds: make(map[string]*PipeBind, 0)} }}
+	KindWidget   = &Kind{Name: "widget", Cloneable: false, Stateful: false, SampleObject: PipeWidget{}, NewObject: func(id string) IdObject { return &PipeWidget{Id: id, Params: make([]*PipeParam, 0)} }}
+	// Applet represents a service which provide intelligence in Pipeline, Funclet works as FaaS which allows users to define their own data process logic
 	KindApplet   = &Kind{Name: "applet", Cloneable: true, Stateful: true, SampleObject: Applet{}, NewObject: func(id string) IdObject { return &Applet{Id: id} }}
 	KindFunclet  = &Kind{Name: "funclet", Cloneable: true, Stateful: true, SampleObject: Funclet{}, NewObject: func(id string) IdObject { return &Funclet{Id: id} }}
 	KindServlet  = &Kind{Name: "servlet", Cloneable: false, Stateful: true, SampleObject: Servlet{}, NewObject: func(id string) IdObject { return &Servlet{Id: id, Envs: make(map[string]string, 0), Volumes: make(map[string]string, 0), Labels: make(map[string]string, 0)}	}}
-	KindState    = &Kind{Name: "state", Cloneable: false, Stateful: false, SampleObject: State{}, NewObject: func(id string) IdObject { return State{"id": id} }}
-	KindProduct  = &Kind{Name: "product", Cloneable: false, Stateful: false, SampleObject: DeviceProduct{}, NewObject: func(id string) IdObject { return &DeviceProduct{Id: id} }}
-	KindProtocol = &Kind{Name: "protocol", Cloneable: false, Stateful: false, SampleObject: DeviceProtocol{}, NewObject: func(id string) IdObject { return &DeviceProtocol{Id: id, Params: make([]*DeviceParam, 0)} }}
-	KindWidget   = &Kind{Name: "widget", Cloneable: false, Stateful: false, SampleObject: PipeWidget{}, NewObject: func(id string) IdObject { return &PipeWidget{Id: id, Params: make([]*PipeParam, 0)} }}
+
 )
 
 var AllKinds = []*Kind{

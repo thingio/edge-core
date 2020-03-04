@@ -87,7 +87,7 @@ func (dc *DatahubClient) QueryResources(kind *resource.Kind, idPrefix string) ([
 	}
 }
 
-func (dc *DatahubClient) WatchResource(kind *resource.Kind, watcher api.ResourceWatcher) error {
+func (dc *DatahubClient) WatchResource(kind *resource.Kind, watcher api.ResourceWatcher, watchSelf bool) error {
 	key := talkpb.TMessageDataKey(dc.NodeId, kind, "#")
 	tmsgCh, err := dc.TClient.Watch(key)
 	if err != nil {
@@ -95,7 +95,7 @@ func (dc *DatahubClient) WatchResource(kind *resource.Kind, watcher api.Resource
 	}
 
 	for tmsg := range tmsgCh {
-		if tmsg.Sender != dc.TClient.ClientId() { // ignore the change made by client itself
+		if watchSelf || tmsg.Sender != dc.TClient.ClientId() { // ignore the change made by client itself
 			res, err := resource.UnmarshalResource(kind, tmsg.Payload)
 			if err != nil {
 				return err
