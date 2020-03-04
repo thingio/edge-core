@@ -119,6 +119,11 @@ func Errorf(format string, args ...interface{}) {
 	root.Errorf(format, args...)
 }
 
+// Fatalf log error info
+func Fatalf(format string, args ...interface{}) {
+	root.Fatalf(format, args...)
+}
+
 // Debugln log debug info
 func Debugln(args ...interface{}) {
 	root.Debugln(args...)
@@ -137,6 +142,11 @@ func Warnln(args ...interface{}) {
 // Errorln log error info
 func Errorln(args ...interface{}) {
 	root.Errorln(args...)
+}
+
+// Fatalln log error info
+func Fatalln(args ...interface{}) {
+	root.Fatalln(args...)
 }
 
 type fileConfig struct {

@@ -28,6 +28,7 @@ func main() {
 	MountRestAPI(cli)
 	MountWebSocketAPI(cli)
 
+	log.Infof("apiserver listen at %s", conf.Config.Server.Addr)
 	err = http.ListenAndServe(conf.Config.Server.Addr, nil)
 	log.WithError(err).Fatal("Failed to start apiserver server")
 }

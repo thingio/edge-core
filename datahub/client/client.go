@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"github.com/juju/errors"
 	"github.com/thingio/edge-core/common/conf"
+	"github.com/thingio/edge-core/common/log"
 	"github.com/thingio/edge-core/common/proto/resource"
 	talkpb "github.com/thingio/edge-core/common/proto/talk"
 	"github.com/thingio/edge-core/common/service"
 	"github.com/thingio/edge-core/common/talk"
 	"github.com/thingio/edge-core/datahub/api"
-	"log"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func (dc *DatahubClient) GetResource(kind *resource.Kind, id string) (*resource.
 		}
 		return r, nil
 	} else {
-		log.Fatal("No other talk methods should go here!")
+		log.Warnln("No other talk methods should go here!")
 		return nil, nil
 	}
 }
@@ -82,7 +82,7 @@ func (dc *DatahubClient) QueryResources(kind *resource.Kind, idPrefix string) ([
 		}
 		return rs, nil
 	} else {
-		log.Fatal("No other talk methods should go here!")
+		log.Fatalf("No other talk methods should go here!")
 		return nil, nil
 	}
 }
@@ -94,15 +94,18 @@ func (dc *DatahubClient) WatchResource(kind *resource.Kind, watcher api.Resource
 		return err
 	}
 
-	for tmsg := range tmsgCh {
-		if watchSelf || tmsg.Sender != dc.TClient.ClientId() { // ignore the change made by client itself
-			res, err := resource.UnmarshalResource(kind, tmsg.Payload)
-			if err != nil {
-				return err
+	go func(tmsgCh chan *talkpb.TMessage, watcher api.ResourceWatcher) {
+		for tmsg := range tmsgCh {
+			if watchSelf || tmsg.Sender != dc.TClient.ClientId() { // ignore the change made by client itself
+				if res, err := resource.UnmarshalResource(kind, tmsg.Payload); err != nil {
+					log.WithError(err).Errorf("fail to unmarshal payload: %s", tmsg.Payload)
+				} else {
+					watcher(res)
+				}
 			}
-			watcher(res)
 		}
-	}
+	}(tmsgCh, watcher)
+
 	return nil
 }
 
